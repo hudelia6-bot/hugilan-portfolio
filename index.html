@@ -147,7 +147,7 @@
     <details>
       <summary>模型配置（无后端时使用；有后端走服务端，key 不落浏览器）</summary>
       <div class="cfg-grid" style="margin-top:12px">
-        <div><label>服务端 API 地址（部署后填 Worker 地址，留空走同源）</label><input id="srvBase" type="text" placeholder="https://xxx.workers.dev"></div>
+        <div><label>服务端 API 地址（默认已内置，留空自动用默认地址）</label><input id="srvBase" type="text" placeholder="https://luji-map.hudelia6.workers.dev"></div>
         <div><label>API Base</label><input id="apiBase" type="text" placeholder="https://dashscope.aliyuncs.com/compatible-mode/v1"></div>
         <div><label>API Key</label><input id="apiKey" type="password" placeholder="sk-..."></div>
         <div><label>Model</label><input id="model" type="text" placeholder="qwen-flash"></div>
@@ -179,7 +179,8 @@
 
 <script>
 const $=id=>document.getElementById(id);
-let API_BASE=(localStorage.getItem('srvBase')||'').replace(/\/$/,''); // 空 = 同源
+const DEFAULT_SRV='https://luji-map.hudelia6.workers.dev';
+let API_BASE=(localStorage.getItem('srvBase')||DEFAULT_SRV).replace(/\/$/,'');
 let hasServer=false;
 async function probeServer(){ try{ const r=await fetch(API_BASE+'/api/config',{cache:'no-store'}); hasServer=r.ok; }catch{ hasServer=false; } }
 probeServer();
@@ -233,7 +234,7 @@ $('copyLinks').onclick=()=>{
   const lines=rows.map(r=>{const v=r.querySelector('.name').value.trim();const L=linksFor({name:v,lng:null,lat:null,wgs:null});return v+' | 苹果:'+L.apple+' | 高德:'+L.amap+' | 谷歌:'+L.google}).join('\n');
   navigator.clipboard?navigator.clipboard.writeText(lines).then(()=>$('status').textContent='地图链接已复制'):$('status').textContent='复制失败';
 };
-$('saveCfg').onclick=()=>{localStorage.setItem('srvBase',$('srvBase').value.trim());API_BASE=$('srvBase').value.trim().replace(/\/$/,'');probeServer();localStorage.setItem('base',$('apiBase').value.trim());localStorage.setItem('key',$('apiKey').value.trim());localStorage.setItem('model',$('model').value.trim()||'qwen-flash');$('status').textContent='配置已保存（仅本机浏览器）';};
+$('saveCfg').onclick=()=>{localStorage.setItem('srvBase',$('srvBase').value.trim());API_BASE=($('srvBase').value.trim()||DEFAULT_SRV).replace(/\/$/,'');probeServer();localStorage.setItem('base',$('apiBase').value.trim());localStorage.setItem('key',$('apiKey').value.trim());localStorage.setItem('model',$('model').value.trim()||'qwen-flash');$('status').textContent='配置已保存（仅本机浏览器）';};
 function loadCfg(){return {base:localStorage.getItem('base')||'',key:localStorage.getItem('key')||'',model:localStorage.getItem('model')||'qwen-flash'};}
 function renderDemo(){render([{name:'西湖',type:'景点'},{name:'断桥',type:'景点'},{name:'河坊街',type:'商圈'},{name:'灵隐寺',type:'景点'},{name:'龙井村',type:'景点'},{name:'满觉陇',type:'住宿'},{name:'杭州东站',type:'交通'}]);}
 
