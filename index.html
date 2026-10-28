@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>胡贵兰 · 带着工程和数据底子，做 AI 应用的业务落地</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "surface-dim": "#dbdad5",
+          "primary": "#141516",
+          "outline-subtle": "rgba(20, 21, 22, 0.08)",
+          "surface": "#FAF9F5",
+          "surface-container": "#F4F3ED",
+          "surface-card": "rgba(255, 255, 255, 0.72)",
+          "background": "#FAF9F5",
+          "mineral-obsidian": "#141516",
+          "graphite-muted": "#737373",
+          "sand-light": "#EFECE6"
+        },
+        fontFamily: {
+          "headline-editorial": ["Newsreader", "serif"],
+          "sans": ["Geist", "sans-serif"],
+          "mono": ["Space Mono", "monospace"]
+        }
+      }
+    }
+  }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@200;300;400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400;1,6..72,300;1,6..72,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  html { scroll-behavior: smooth; }
+  body { font-family: "Geist", "PingFang SC", "Microsoft YaHei", sans-serif; background: #FAF9F5; color: #141516; -webkit-font-smoothing: antialiased; }
+  ::selection { background: rgba(20,21,22,0.9); color: #FAF9F5; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-thumb { background: rgba(20,21,22,0.15); }
+
+  /* fluid.glass signature material */
+  .fluid-glass-surface {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border: 1px solid rgba(20, 21, 22, 0.06);
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .fluid-glass-surface:hover {
+    border-color: rgba(20, 21, 22, 0.14);
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 30px 60px -20px rgba(20, 21, 22, 0.06);
+  }
+  .subtle-line { border-color: rgba(20, 21, 22, 0.08); }
+  #toast-notification { transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+</style>
+</head>
+<body class="bg-surface text-mineral-obsidian">
+
+<!-- Toast -->
+<div id="toast-notification" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] pointer-events-none opacity-0 translate-y-4 px-6 py-3 rounded-full bg-mineral-obsidian text-white font-mono text-[12px] tracking-wide shadow-2xl flex items-center gap-3 backdrop-blur-xl">
+  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+  <span id="toast-text">已复制</span>
+</div>
+
+<!-- Navigation -->
+<header class="fixed top-0 inset-x-0 z-50 transition-all duration-300 backdrop-blur-md bg-surface/75 border-b border-black/[0.05]">
+  <div class="max-w-7xl mx-auto h-20 px-6 md:px-12 flex items-center justify-between">
+    <a class="group flex items-baseline gap-3" href="#top">
+      <span class="text-sm font-medium tracking-tight text-mineral-obsidian">胡贵兰 · HU GUILAN</span>
+      <span class="text-xs font-mono text-graphite-muted hidden sm:inline tracking-wider">AI 应用 · 产品与业务落地</span>
+    </a>
+    <nav class="hidden md:flex items-center gap-8 text-[13px] font-sans tracking-tight text-graphite-muted">
+      <a class="hover:text-mineral-obsidian transition-colors" href="#doing">DOING</a>
+      <a class="hover:text-mineral-obsidian transition-colors" href="#thinking">THINKING</a>
+      <a class="hover:text-mineral-obsidian transition-colors" href="#done">CASES</a>
+      <a class="hover:text-mineral-obsidian transition-colors" href="#journey">ARCHIVE</a>
+      <a class="hover:text-mineral-obsidian transition-colors" href="#contact">CONTACT</a>
+    </nav>
+    <a href="#contact" class="text-xs font-mono tracking-wider px-4 py-2 rounded-full border border-black/10 hover:border-black/30 hover:bg-black hover:text-white transition-all duration-300">
+      GET IN TOUCH ↗
+    </a>
+  </div>
+</header>
+
+<main class="w-full pt-20" id="top">
+  <div class="max-w-7xl mx-auto px-6 md:px-12">
+
+    <!-- Hero -->
+    <section class="pt-24 md:pt-36 pb-28 md:pb-40 border-b subtle-line">
+      <div class="flex items-center justify-between mb-16 text-xs font-mono tracking-widest text-graphite-muted">
+        <div class="flex items-center gap-2">
+          <span class="w-1.5 h-1.5 rounded-full bg-mineral-obsidian"></span>
+          <span>PORTFOLIO // 2026</span>
+        </div>
+        <span class="hidden sm:inline">ENGINEERING × DATA × AI LANDING</span>
+      </div>
+
+      <div class="max-w-5xl mb-20">
+        <h1 class="text-5xl sm:text-7xl md:text-8xl font-light tracking-tight leading-[1.08] mb-10 text-mineral-obsidian">
+          带着工程和数据底子，<br>
+          <span class="font-headline-editorial italic text-graphite-muted font-light">做 AI 应用的业务落地。</span>
+        </h1>
+        <p class="text-xl md:text-2xl text-graphite-muted font-light max-w-3xl leading-relaxed">
+          产品思维 × 数据素养 × 从 0 到 1 交付。把模糊需求收敛成核心问题，先跑通再完善，再把判断与方法沉淀为可复用规则。
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-16 pt-12 border-t subtle-line">
+        <div>
+          <div class="text-xs font-mono text-graphite-muted tracking-widest uppercase mb-4">(01) / CROSSOVER</div>
+          <div class="text-4xl md:text-5xl font-light text-mineral-obsidian tracking-tight mb-3">工程 → 数据 → 产品</div>
+          <p class="text-sm text-graphite-muted leading-relaxed font-light">软工（卓越计划）打底，自然地理测年做数据处理，再回到产品与 AI 落地，一条跨界的复合主线。</p>
+        </div>
+        <div>
+          <div class="text-xs font-mono text-graphite-muted tracking-widest uppercase mb-4">(02) / DELIVERY</div>
+          <div class="text-4xl md:text-5xl font-light text-mineral-obsidian tracking-tight mb-3">0 → 1 上线</div>
+          <p class="text-sm text-graphite-muted leading-relaxed font-light">物流运费测算小程序、云端案例库、数字员工技能，都推到可运行、可演示，而不是停留在文档。</p>
+        </div>
+        <div>
+          <div class="text-xs font-mono text-graphite-muted tracking-widest uppercase mb-4">(03) / EVIDENCE</div>
+          <div class="text-4xl md:text-5xl font-light text-mineral-obsidian tracking-tight mb-3">事实 / 判断 / 共创</div>
+          <p class="text-sm text-graphite-muted leading-relaxed font-light">对外表达守住证据边界：不把共创写成个人成果，不把未验证写成已验证。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Doing / Demo -->
+    <section class="py-28 md:py-36 border-b subtle-line" id="doing">
+      <div class="flex items-baseline justify-between mb-16">
+        <span class="text-xs font-mono tracking-widest text-graphite-muted uppercase">(01) / BUILDING NOW</span>
+        <span class="text-xs font-mono text-graphite-muted">TRAVEL NOTE → MAP</span>
+      </div>
+
+      <div class="fluid-glass-surface rounded-3xl p-8 md:p-16">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+          <div class="lg:col-span-6 flex flex-col justify-between space-y-10">
+            <div>
+              <span class="text-xs font-mono text-graphite-muted tracking-wider uppercase block mb-4">AI 落地的独立小产品</span>
+              <h2 class="text-3xl md:text-5xl font-light text-mineral-obsidian tracking-tight leading-tight mb-6">
+                旅行笔记，一键变成<br>地图上的地点标记
+              </h2>
+              <p class="text-base md:text-lg text-graphite-muted font-light leading-relaxed mb-8">
+                粘贴一篇小红书 / 公众号旅行笔记，AI 抽出地点并解析坐标，一键打开苹果、高德、谷歌地图收藏——不装 App，纯地图标记。先从一个小的功能点出发，后续再补攻略制定。
+              </p>
+              <div class="flex flex-wrap gap-4">
+                <a href="demo/index.html" target="_blank" class="px-6 py-3 rounded-full bg-mineral-obsidian text-white text-sm font-mono tracking-wider hover:opacity-90 transition-opacity">打开 Demo ↗</a>
+                <span class="px-6 py-3 rounded-full border border-black/10 text-sm text-graphite-muted">自研 API · 零依赖后端 · 演示模式可用</span>
+              </div>
+            </div>
+          </div>
+          <div class="lg:col-span-6">
+            <div class="grid grid-cols-2 gap-6">
+              <div class="p-6 rounded-2xl bg-white/70 border border-black/[0.06]">
+                <div class="text-3xl font-light text-mineral-obsidian tracking-tight">笔记 → 地点</div>
+                <span class="text-xs font-mono text-graphite-muted block mt-2">正文地名 + 自带定位，两路识别</span>
+              </div>
+              <div class="p-6 rounded-2xl bg-white/70 border border-black/[0.06]">
+                <div class="text-3xl font-light text-mineral-obsidian tracking-tight">三端跳转</div>
+                <span class="text-xs font-mono text-graphite-muted block mt-2">苹果 / 高德 / 谷歌地图</span>
+              </div>
+              <div class="p-6 rounded-2xl bg-white/70 border border-black/[0.06]">
+                <div class="text-3xl font-light text-mineral-obsidian tracking-tight">坐标换算</div>
+                <span class="text-xs font-mono text-graphite-muted block mt-2">GCJ-02 ↔ WGS-84 已实现</span>
+              </div>
+              <div class="p-6 rounded-2xl bg-white/70 border border-black/[0.06]">
+                <div class="text-3xl font-light text-mineral-obsidian tracking-tight">待接入</div>
+                <span class="text-xs font-mono text-graphite-muted block mt-2">DeepSeek / Qwen + 高德地理编码</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Thinking / Principles -->
+    <section class="py-28 md:py-36 border-b subtle-line" id="thinking">
+      <div class="flex items-baseline justify-between mb-16">
+        <span class="text-xs font-mono tracking-widest text-graphite-muted uppercase">(02) / HOW I THINK</span>
+        <span class="text-xs font-mono text-graphite-muted">PRODUCT AXIOMS</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="fluid-glass-surface rounded-3xl p-10 flex flex-col justify-between group">
+          <div>
+            <span class="text-xs font-mono text-graphite-muted tracking-wider uppercase block mb-6">01 / MINIMAL FRICTION</span>
+            <h3 class="text-2xl font-light text-mineral-obsidian tracking-tight mb-4">核心需求</h3>
+            <p class="text-sm text-graphite-muted font-light leading-relaxed">抓住唯一关键需求并取舍。物流运费里，用户要的其实只有“体积/重量 + 收发地 = 运费”；导师标签里，把“打标签”重新定义为“字段治理”。</p>
+          </div>
+        </div>
+        <div class="fluid-glass-surface rounded-3xl p-10 flex flex-col justify-between group">
+          <div>
+            <span class="text-xs font-mono text-graphite-muted tracking-wider uppercase block mb-6">02 / EMPIRICAL PROOF</span>
+            <h3 class="text-2xl font-light text-mineral-obsidian tracking-tight mb-4">敏捷开发</h3>
+            <p class="text-sm text-graphite-muted font-light leading-relaxed">小步迭代，先跑通主链路。物流小程序先出可测算的初版；云端案例库从“登录 + 检索 + 上线”逐步补齐，而不是一次做完。</p>
+          </div>
+        </div>
+        <div class="fluid-glass-surface rounded-3xl p-10 flex flex-col justify-between group">
+          <div>
+            <span class="text-xs font-mono text-graphite-muted tracking-wider uppercase block mb-6">03 / SOP LEVERAGE</span>
+            <h3 class="text-2xl font-light text-mineral-obsidian tracking-tight mb-4">快速落地</h3>
+            <p class="text-sm text-graphite-muted font-light leading-relaxed">把想法推到 0→1 可用。独立搭建云端案例库并部署上线；数字员工技能封装上线。落地可演示，不只是文档。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cases / Done -->
+    <section class="py-28 md:py-36 border-b subtle-line" id="done">
+      <div class="flex items-baseline justify-between mb-16">
+        <span class="text-xs font-mono tracking-widest text-graphite-muted uppercase">(03) / SELECTED WORK</span>
+        <span class="text-xs font-mono text-graphite-muted">PRODUCT · AI · SALES</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="fluid-glass-surface rounded-3xl p-10 md:p-12 flex flex-col justify-between group">
+          <div>
+            <span class="text-xs font-mono text-graphite-muted tracking-wider uppercase block mb-6">PRODUCT · 微信小程序</span>
+            <h3 class="text-2xl md:text-3xl font-light text-mineral-obsidian tracking-tight mb-4">物流运费测算小程序</h3>
+            <p class="text-sm text-graphite-muted font-light leading-relaxed">判断核心需求是“按体积、重量、收发地测算运费”，诉求是便捷且价格清晰，先快速迭代初版，再完善后续功能。</p>
+          </div>
+          <div class="mt-8 pt-6 border-t subtle-line text-xs font-mono text-graphite-muted">需求判断 → 初版 → 迭代</div>
+        </div>
+        <div class="fluid-glass-surface rounded-3xl p-10 md:p-12 flex flex-col justify-between group">
+          <div>
+            <span class="text-xs font-mono text-graphite-muted tracking-wider uppercase block mb-6">PRODUCT · AI · 0→1</span>
+            <h3 class="text-2xl md:text-3xl font-light text-mineral-obsidian tracking-tight mb-4">云端案例库</h3>
+            <p class="text-sm text-graphite-muted font-light leading-relaxed">Parse 云端 + 云函数 + 前端 + 模糊检索 + 租户隔离，从空到部署上线，把销售经验沉淀成可检索资产。</p>
+          </div>
+          <div class="mt-8 pt-6 border-t subtle-line text-xs font-mono text-graphite-muted">独立搭建 → 部署上线</div>
+        </div>
+        <div class="fluid-glass-surface rounded-3xl p-10 md:p-12 flex flex-col justify-between group">
+          <div>
+            <span class="text-xs font-mono text-graphite-muted tracking-wider uppercase block mb-6">BUSINESS · AI</span>
+            <h3 class="text-2xl md:text-3xl font-light text-mineral-obsidian tracking-tight mb-4">链路诊断与工作流重塑</h3>
+            <p class="text-sm text-graphite-muted font-light leading-relaxed">用“用户旅程 → 服务蓝图 → 泳道 → 诊断 → 重塑 → AI → 指标”重构销售转化链路，把重复动作交数字人。</p>
+          </div>
+          <div class="mt-8 pt-6 border-t subtle-line text-xs font-mono text-graphite-muted">链路 → 诊断 → 重塑 → AI</div>
+        </div>
+        <div class="fluid-glass-surface rounded-3xl p-10 md:p-12 flex flex-col justify-between group">
+          <div>
+            <span class="text-xs font-mono text-graphite-muted tracking-wider uppercase block mb-6">SALES · MARKETING</span>
+            <h3 class="text-2xl md:text-3xl font-light text-mineral-obsidian tracking-tight mb-4">销售与营销全链路</h3>
+            <p class="text-sm text-graphite-muted font-light leading-relaxed">需求挖掘、销冠 SOP 拆解、双十一策略与物料 Brief 转译，把一线经验沉淀成可复用规则。</p>
+          </div>
+          <div class="mt-8 pt-6 border-t subtle-line text-xs font-mono text-graphite-muted">一线 → 规则沉淀</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Journey / Archive -->
+    <section class="py-28 md:py-36 border-b subtle-line" id="journey">
+      <div class="flex items-baseline justify-between mb-16">
+        <span class="text-xs font-mono tracking-widest text-graphite-muted uppercase">(04) / ARCHIVE</span>
+        <span class="text-xs font-mono text-graphite-muted">EDUCATION × WORK</span>
+      </div>
+
+      <div class="fluid-glass-surface rounded-3xl p-10 md:p-16">
+        <div class="space-y-0">
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-6 py-8 border-b subtle-line">
+            <div class="md:col-span-3 text-xs font-mono text-graphite-muted tracking-wider pt-1">2019 — 2023</div>
+            <div class="md:col-span-9">
+              <h3 class="text-2xl font-light text-mineral-obsidian tracking-tight mb-2">西南科技大学 · 软件工程（卓越计划）</h3>
+              <p class="text-sm text-graphite-muted font-light leading-relaxed">工程与代码底子，多段产品经理实习。</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-6 py-8 border-b subtle-line">
+            <div class="md:col-span-3 text-xs font-mono text-graphite-muted tracking-wider pt-1">硕士</div>
+            <div class="md:col-span-9">
+              <h3 class="text-2xl font-light text-mineral-obsidian tracking-tight mb-2">南京师范大学 · 自然地理学（铀系测年及数据处理）</h3>
+              <p class="text-sm text-graphite-muted font-light leading-relaxed">主动跨界地理 + 数据处理，迭代 Matlab 数据处理工具，有论文和代码。</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-6 py-8 border-b subtle-line">
+            <div class="md:col-span-3 text-xs font-mono text-graphite-muted tracking-wider pt-1">AI 管培生</div>
+            <div class="md:col-span-9">
+              <h3 class="text-2xl font-light text-mineral-obsidian tracking-tight mb-2">路觅教育 · AI 管培生</h3>
+              <p class="text-sm text-graphite-muted font-light leading-relaxed">T1/T2 规划报告、导师字段治理、用户链路诊断、数字员工工作流。</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-6 py-8">
+            <div class="md:col-span-3 text-xs font-mono text-graphite-muted tracking-wider pt-1">销售轮岗</div>
+            <div class="md:col-span-9">
+              <h3 class="text-2xl font-light text-mineral-obsidian tracking-tight mb-2">路觅教育 · 销售轮岗</h3>
+              <p class="text-sm text-graphite-muted font-light leading-relaxed">销售链路还原、销冠 SOP 拆解、AI 销售项目、案例库落地。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section class="py-28 md:py-36" id="contact">
+      <div class="flex items-baseline justify-between mb-16">
+        <span class="text-xs font-mono tracking-widest text-graphite-muted uppercase">(05) / CONNECT</span>
+        <span class="text-xs font-mono text-graphite-muted">AI 落地 · 产品 · 合作</span>
+      </div>
+
+      <div class="max-w-3xl">
+        <h2 class="text-3xl md:text-5xl font-light text-mineral-obsidian tracking-tight leading-tight mb-6">
+          想聊 AI 落地或产品，<br>欢迎来信。
+        </h2>
+        <p class="text-base md:text-lg text-graphite-muted font-light leading-relaxed mb-10">
+          无论是一线业务与 AI 工具的结合方案，还是技术中台的落地规划，都期待碰撞。
+        </p>
+        <div class="flex flex-wrap items-center gap-4">
+          <button onclick="copyToClipboard('you@example.com','✓ 邮箱已复制')" class="px-6 py-3 rounded-full bg-mineral-obsidian text-white text-sm font-mono tracking-wider hover:opacity-90 transition-opacity">复制邮箱 you@example.com</button>
+          <a href="mailto:you@example.com" class="px-6 py-3 rounded-full border border-black/10 text-sm text-graphite-muted hover:border-black/30 hover:text-mineral-obsidian transition-all duration-300">直接发起邮件 ↗</a>
+        </div>
+        <p class="text-xs font-mono text-graphite-muted mt-10">SHANGHAI // REMOTE CAPABLE · 邮箱与社交链接为占位，待替换</p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="border-t subtle-line py-10">
+  <div class="max-w-7xl mx-auto px-6 md:px-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+    <div>
+      <div class="text-sm font-medium tracking-tight">胡贵兰 · HU GUILAN</div>
+      <div class="text-xs font-mono text-graphite-muted tracking-wider mt-1">AI 应用 · 产品与业务落地</div>
+    </div>
+    <div class="flex items-center gap-6 text-xs font-mono text-graphite-muted tracking-wider">
+      <a class="hover:text-mineral-obsidian transition-colors" href="#">GITHUB ↗</a>
+      <a class="hover:text-mineral-obsidian transition-colors" href="#">EMAIL ↗</a>
+    </div>
+  </div>
+  <div class="max-w-7xl mx-auto px-6 md:px-12 mt-8">
+    <p class="text-xs text-graphite-muted">© 2026 胡贵兰 · 案例库等公司资产未公开链接；项目细节遵循“事实 / 判断 / 共创 / 待验证”的边界。</p>
+  </div>
+</footer>
+
+<script>
+  function copyToClipboard(text, message) {
+    if (navigator.clipboard) { navigator.clipboard.writeText(text); }
+    showToast(message || '已复制');
+  }
+  function showToast(msg) {
+    const toast = document.getElementById('toast-notification');
+    const textElem = document.getElementById('toast-text');
+    textElem.textContent = msg;
+    toast.classList.remove('opacity-0', 'translate-y-4');
+    toast.classList.add('opacity-100', 'translate-y-0');
+    clearTimeout(window.toastTimer);
+    window.toastTimer = setTimeout(() => {
+      toast.classList.remove('opacity-100', 'translate-y-0');
+      toast.classList.add('opacity-0', 'translate-y-4');
+    }, 2600);
+  }
+</script>
+</body>
+</html>

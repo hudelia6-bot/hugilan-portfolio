@@ -1,0 +1,18 @@
+# 敏感与本地文件
+.env
+.DS_Store
+
+# 备份与预览
+*.backup*.html
+preview-*.png
+preview-*.jpg
+demo-preview-*.png
+
+# 本地开发后端（部署走 worker.js）
+server.mjs
+
+# 内部源资料（含公司项目细节，不公开）
+网站内容源资料与能力库.md
+网站信息架构与文案骨架.md
+demo-PRD-旅行笔记地图标记.md
+demo-竞品调研.md

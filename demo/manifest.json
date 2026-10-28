@@ -1,0 +1,16 @@
+{
+  "name": "旅记地图 · 不装 App 的地图收藏",
+  "short_name": "旅记地图",
+  "description": "粘贴一篇旅行笔记，AI 抽出地点，一键打开苹果 / 高德 / 谷歌地图收藏。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF9F5",
+  "theme_color": "#141516",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
