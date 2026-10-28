@@ -20,3 +20,6 @@ demo-竞品调研.md
 # 个人网站（暂不开发上线，本地保存）
 personal/
 demo/
+
+# Cloudflare Wrangler 本地缓存
+.wrangler/

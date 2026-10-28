@@ -118,7 +118,7 @@ export default {
     const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
     if (rateLimited(ip)) return json({ error: '请求过于频繁，请稍后再试' }, 429);
     try {
-      if (p === '/api/config') return json({ llm: !!(env.LLM_API_KEY && env.LLM_BASE_URL), amap: !!env.AMAP_KEY, model: env.LLM_MODEL || 'qwen-flash' });
+      if (p === '/api/config') return json({ llm: !!env.LLM_API_KEY, amap: !!env.AMAP_KEY, model: env.LLM_MODEL || 'qwen-flash' });
       if (p === '/api/extract' && request.method === 'POST') {
         const b = await request.json().catch(() => ({}));
         const out = await extractPlaces((b.text || '').trim(), (b.geo || '').trim(), env);
