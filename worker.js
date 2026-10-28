@@ -9,6 +9,25 @@ const DEMO = [
   { name: '杭州东站', type: '交通' }, { name: '万象城', type: '商圈' },
 ];
 
+// —— 防滥用：来源校验 + 按 IP 限流（内存级，冷启动/多实例会重置；更强防护可再加 Turnstile 或 WAF 限流规则）——
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX = 10; // 每个 IP 每分钟最多 10 次请求
+const rlHits = new Map();
+function rateLimited(ip) {
+  const now = Date.now();
+  const arr = (rlHits.get(ip) || []).filter((t) => now - t < RATE_WINDOW_MS);
+  if (arr.length >= RATE_MAX) { rlHits.set(ip, arr); return true; }
+  arr.push(now); rlHits.set(ip, arr);
+  if (rlHits.size > 5000) { const old = [...rlHits.keys()].slice(0, 1000); old.forEach((k) => rlHits.delete(k)); }
+  return false;
+}
+function originAllowed(origin, env) {
+  if (!origin) return true; // curl 等无 Origin 请求放行，真正的成本保护靠限流 + Turnstile + Key 限额
+  const allow = (env.ALLOWED_ORIGINS || 'https://hudelia6-bot.github.io,http://localhost,http://127.0.0.1')
+    .split(',').map((x) => x.trim().replace(/\/$/, '')).filter(Boolean);
+  return allow.some((a) => origin === a || origin.startsWith(a + ':') || origin.startsWith(a + '/'));
+}
+
 // 坐标系：高德/国内用 GCJ-02，苹果/谷歌用 WGS-84。
 const A = 6378245.0, EE = 0.00669342162296594323;
 const outOfChina = (lng, lat) => lng < 72.004 || lng > 137.8347 || lat < 0.8293 || lat > 55.8271;
@@ -64,10 +83,10 @@ async function geocode(name, amapKey) {
 }
 
 async function extractPlaces(text, geo, env) {
-  const base = (env.LLM_BASE_URL || '').replace(/\/$/, '');
+  const base = (env.LLM_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1').replace(/\/$/, '');
   const key = env.LLM_API_KEY || '';
   if (!key || !base) return { places: DEMO, demo: true };
-  const model = env.LLM_MODEL || 'deepseek-chat';
+  const model = env.LLM_MODEL || 'qwen-flash';
   const sys = '你是地点抽取器。从用户提供的旅行笔记文本中抽取所有具体地点（城市/景点/餐厅/街区/店铺/车站等），只返回 JSON 数组，元素形如 {"name":"地点名","type":"景点|餐饮|住宿|交通|商圈|其他"}。不要解释，不要编造不存在的词。若用户提供"笔记自带定位"，把该定位作为第一个元素并 type 设为"自带定位"。';
   const user = `笔记自带定位：${geo || '无'}\n\n笔记正文：\n${text}`;
   const r = await fetch(`${base}/chat/completions`, {
@@ -94,8 +113,12 @@ export default {
     const url = new URL(request.url);
     const p = url.pathname;
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' } });
+    const origin = request.headers.get('Origin');
+    if (!originAllowed(origin, env)) return json({ error: 'forbidden origin' }, 403);
+    const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+    if (rateLimited(ip)) return json({ error: '请求过于频繁，请稍后再试' }, 429);
     try {
-      if (p === '/api/config') return json({ llm: !!(env.LLM_API_KEY && env.LLM_BASE_URL), amap: !!env.AMAP_KEY, model: env.LLM_MODEL || 'deepseek-chat' });
+      if (p === '/api/config') return json({ llm: !!(env.LLM_API_KEY && env.LLM_BASE_URL), amap: !!env.AMAP_KEY, model: env.LLM_MODEL || 'qwen-flash' });
       if (p === '/api/extract' && request.method === 'POST') {
         const b = await request.json().catch(() => ({}));
         const out = await extractPlaces((b.text || '').trim(), (b.geo || '').trim(), env);
