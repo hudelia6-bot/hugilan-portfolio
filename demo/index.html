@@ -106,11 +106,11 @@
 
 <header>
   <div class="bar">
-    <a class="brand" href="/">
+    <a class="brand" href="../">
       <b>旅记地图</b>
       <span>NO-APP · MAP SAVE</span>
     </a>
-    <a class="back" href="/">← 返回个人站</a>
+    <a class="back" href="../">← 返回个人站</a>
   </div>
 </header>
 
@@ -180,6 +180,9 @@
 <script>
 const $=id=>document.getElementById(id);
 let API_BASE=(localStorage.getItem('srvBase')||'').replace(/\/$/,''); // 空 = 同源
+let hasServer=false;
+async function probeServer(){ try{ const r=await fetch(API_BASE+'/api/config',{cache:'no-store'}); hasServer=r.ok; }catch{ hasServer=false; } }
+probeServer();
 const SAMPLE='上周去了杭州，从西湖边骑车到断桥，晚上在河坊街逛吃；第二天上午去了灵隐寺，下午到龙井村喝茶，住在满觉陇，回程从杭州东站坐车。';
 
 function linksFor(p){
@@ -230,7 +233,7 @@ $('copyLinks').onclick=()=>{
   const lines=rows.map(r=>{const v=r.querySelector('.name').value.trim();const L=linksFor({name:v,lng:null,lat:null,wgs:null});return v+' | 苹果:'+L.apple+' | 高德:'+L.amap+' | 谷歌:'+L.google}).join('\n');
   navigator.clipboard?navigator.clipboard.writeText(lines).then(()=>$('status').textContent='地图链接已复制'):$('status').textContent='复制失败';
 };
-$('saveCfg').onclick=()=>{localStorage.setItem('srvBase',$('srvBase').value.trim());localStorage.setItem('base',$('apiBase').value.trim());localStorage.setItem('key',$('apiKey').value.trim());localStorage.setItem('model',$('model').value.trim()||'deepseek-chat');$('status').textContent='配置已保存（仅本机浏览器）';};
+$('saveCfg').onclick=()=>{localStorage.setItem('srvBase',$('srvBase').value.trim());API_BASE=$('srvBase').value.trim().replace(/\/$/,'');probeServer();localStorage.setItem('base',$('apiBase').value.trim());localStorage.setItem('key',$('apiKey').value.trim());localStorage.setItem('model',$('model').value.trim()||'deepseek-chat');$('status').textContent='配置已保存（仅本机浏览器）';};
 function loadCfg(){return {base:localStorage.getItem('base')||'',key:localStorage.getItem('key')||'',model:localStorage.getItem('model')||'deepseek-chat'};}
 function renderDemo(){render([{name:'西湖',type:'景点'},{name:'断桥',type:'景点'},{name:'河坊街',type:'商圈'},{name:'灵隐寺',type:'景点'},{name:'龙井村',type:'景点'},{name:'满觉陇',type:'住宿'},{name:'杭州东站',type:'交通'}]);}
 
@@ -252,13 +255,14 @@ async function extractStatic(text,geo){
 $('extract').onclick=async()=>{
   const text=$('note').value.trim();const geo=$('geo').value.trim();
   if(!text){$('status').textContent='请先粘贴笔记正文';return}
+  if(!hasServer){ renderDemo(); $('status').textContent='演示模式：未检测到后端（部署后请在配置里填 Worker 地址）'; return; }
   $('status').textContent='提取中…';
   try{
     const r=await fetch(API_BASE+'/api/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,geo})});
     const d=await r.json();
     if(d.error)throw new Error(d.error);
     render(d.places);$('status').textContent=d.demo?'演示模式（服务端未配 LLM Key）':'已提取 '+d.places.length+' 个地点';
-  }catch(e){$('status').textContent='提取失败：'+e.message;}
+  }catch(e){ hasServer=false; renderDemo(); $('status').textContent='后端不可用，已切换演示模式'; }
 };
 </script>
 <script>
