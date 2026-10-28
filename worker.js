@@ -1,13 +1,19 @@
 // 旅记地图 · Cloudflare Worker（服务端代理）
-// 职责：/api/config /api/extract /api/geocode；静态文件由 GitHub Pages 托管。
-// 部署：wrangler deploy；环境变量用 `wrangler secret put` 设置：
-//   LLM_BASE_URL, LLM_API_KEY, LLM_MODEL, AMAP_KEY, CORS_ORIGIN（可选，默认 *）
+// 职责：/api/config /api/extract /api/geocode /api/parse-link；静态文件由 GitHub Pages 托管。
+// 部署：wrangler deploy；密钥用 `wrangler secret put`：
+//   LLM_API_KEY（必填，阿里百炼 qwen-flash）、AMAP_KEY（可选，高德地理编码）
 
-const DEMO = [
-  { name: '西湖', type: '景点' }, { name: '断桥', type: '景点' }, { name: '河坊街', type: '商圈' },
-  { name: '灵隐寺', type: '景点' }, { name: '龙井村', type: '景点' }, { name: '满觉陇', type: '住宿' },
-  { name: '杭州东站', type: '交通' }, { name: '万象城', type: '商圈' },
-];
+const DEFAULT_BASE = 'https://dashscope.aliyuncs.com/compatible-mode/v1';
+const DEFAULT_MODEL = 'qwen-flash';
+
+const DEMO = {
+  region: '杭州',
+  places: [
+    { name: '西湖', type: '景点' }, { name: '断桥', type: '景点' }, { name: '河坊街', type: '商圈' },
+    { name: '灵隐寺', type: '景点' }, { name: '龙井村', type: '景点' }, { name: '满觉陇', type: '住宿' },
+    { name: '杭州东站', type: '交通' }, { name: '万象城', type: '商圈' },
+  ],
+};
 
 // —— 防滥用：来源校验 + 按 IP 限流（内存级，冷启动/多实例会重置；更强防护可再加 Turnstile 或 WAF 限流规则）——
 const RATE_WINDOW_MS = 60_000;
@@ -22,7 +28,7 @@ function rateLimited(ip) {
   return false;
 }
 function originAllowed(origin, env) {
-  if (!origin) return true; // curl 等无 Origin 请求放行，真正的成本保护靠限流 + Turnstile + Key 限额
+  if (!origin) return true;
   const allow = (env.ALLOWED_ORIGINS || 'https://hudelia6-bot.github.io,http://localhost,http://127.0.0.1')
     .split(',').map((x) => x.trim().replace(/\/$/, '')).filter(Boolean);
   return allow.some((a) => origin === a || origin.startsWith(a + ':') || origin.startsWith(a + '/'));
@@ -69,7 +75,7 @@ function gcj2wgs(lng, lat) {
 }
 
 async function geocode(name, amapKey) {
-  if (!amapKey) return null;
+  if (!amapKey || !name) return null;
   const u = `https://restapi.amap.com/v3/geocode/geo?address=${encodeURIComponent(name)}&key=${amapKey}`;
   try {
     const r = await fetch(u); const d = await r.json();
@@ -82,25 +88,90 @@ async function geocode(name, amapKey) {
   return null;
 }
 
+function unesc(s) {
+  if (!s) return '';
+  return s
+    .replace(/\\u([0-9a-fA-F]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/\\n/g, '\n').replace(/\\t/g, ' ')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'");
+}
+
+async function parseLink(rawUrl) {
+  let target = (rawUrl || '').trim();
+  if (!target) return { error: '请先粘贴笔记链接' };
+  if (!/^https?:\/\//i.test(target)) target = 'https://' + target;
+  let html;
+  try {
+    const resp = await fetch(target, {
+      redirect: 'follow',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+      },
+    });
+    html = await resp.text();
+  } catch (e) {
+    return { error: '链接打不开：' + e.message };
+  }
+  const metaOf = (key) => {
+    const m = html.match(new RegExp('<meta[^>]+(?:property|name)=["\']' + key + '["\'][^>]+content=["\']([^"\']*)["\']', 'i'))
+           || html.match(new RegExp('<meta[^>]+content=["\']([^"\']*)["\'][^>]+(?:property|name)=["\']' + key + '["\']', 'i'));
+    return m ? unesc(m[1]) : '';
+  };
+  let title = '', desc = '';
+  const tm = html.match(/"title":"((?:[^"\\]|\\.)*)"/);
+  const dm = html.match(/"desc":"((?:[^"\\]|\\.)*)"/);
+  if (tm) title = unesc(tm[1]);
+  if (dm) desc = unesc(dm[1]);
+  if (!title) { const tt = html.match(/<title[^>]*>([^<]+)<\/title>/i); title = (tt ? tt[1] : '') || metaOf('og:title'); }
+  if (!desc) desc = metaOf('og:description') || metaOf('description');
+  title = (title || '').replace(/\s*[—\-]\s*小红书.*$/i, '').trim();
+  desc = (desc || '').trim();
+  const text = [title, desc].filter(Boolean).join('\n').trim();
+  if (!text) return { error: '没解析到正文：小红书常需要登录，可能被拦截。请手动复制粘贴笔记内容。' };
+  let host = ''; try { host = new URL(target).hostname; } catch {}
+  return { title, text, source: host };
+}
+
+const SYSTEM_PROMPT = '你是地点抽取器。从旅行笔记中完成两件事：\n' +
+  '1. 判断笔记主要涉及的城市或国家/地区，作为 region（如「杭州」「巴黎」「日本关西」）。\n' +
+  '2. 抽取文中所有「具体地点」，作为 places。\n\n' +
+  '抽取规则（务必遵守）：\n' +
+  '- 只抽取可在地图上定位的地点：景点、餐厅店名、酒店名、商铺名、车站、街区、商圈等。\n' +
+  '- 必须是「具体地名或完整店名」，例如「卢浮宫」「刘姥姥蟹黄包(南京东路店)」「满觉陇」。\n' +
+  '- 菜名、品类、物品、活动一律不抽取：「蟹黄包」「奶茶」「火锅」「樱花」等都不是地点，除非以完整店名出现（如「刘姥姥蟹黄包」）。\n' +
+  '- 景点用通用官方名；店铺尽量保留品牌+店名全称。\n' +
+  '- 若用户提供「笔记自带定位」，作为 places 第一个元素，type 为「自带定位」。\n' +
+  '- 不要编造文中不存在的地点，不要输出泛化词。\n\n' +
+  '只返回一个 JSON 对象：{"region":"...","places":[{"name":"地点名","type":"景点|餐饮|住宿|交通|商圈|其他"}]}';
+
 async function extractPlaces(text, geo, env) {
-  const base = (env.LLM_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1').replace(/\/$/, '');
+  const base = (env.LLM_BASE_URL || DEFAULT_BASE).replace(/\/$/, '');
   const key = env.LLM_API_KEY || '';
-  if (!key || !base) return { places: DEMO, demo: true };
-  const model = env.LLM_MODEL || 'qwen-flash';
-  const sys = '你是地点抽取器。从用户提供的旅行笔记文本中抽取所有具体地点（城市/景点/餐厅/街区/店铺/车站等），只返回 JSON 数组，元素形如 {"name":"地点名","type":"景点|餐饮|住宿|交通|商圈|其他"}。不要解释，不要编造不存在的词。若用户提供"笔记自带定位"，把该定位作为第一个元素并 type 设为"自带定位"。';
-  const user = `笔记自带定位：${geo || '无'}\n\n笔记正文：\n${text}`;
+  if (!key || !base) return { ...DEMO, demo: true };
+  const model = env.LLM_MODEL || DEFAULT_MODEL;
+  const user = '笔记自带定位：' + (geo || '无') + '\n\n笔记正文：\n' + text;
   const r = await fetch(`${base}/chat/completions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-    body: JSON.stringify({ model, messages: [{ role: 'system', content: sys }, { role: 'user', content: user }], temperature: 0.2 }),
+    body: JSON.stringify({
+      model,
+      messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: user }],
+      temperature: 0.1,
+      response_format: { type: 'json_object' },
+    }),
   });
   if (!r.ok) { const t = await r.text(); throw new Error(`LLM HTTP ${r.status}: ${t.slice(0, 120)}`); }
   const d = await r.json();
   let raw = (d.choices && d.choices[0] && d.choices[0].message.content) || '';
   raw = raw.replace(/```json|```/g, '').trim();
-  const arr = JSON.parse(raw);
-  if (!Array.isArray(arr)) throw new Error('返回不是数组');
-  return { places: arr, demo: false };
+  const obj = JSON.parse(raw);
+  if (Array.isArray(obj)) return { region: '', places: obj, demo: false };
+  const region = (obj.region || '').toString().trim();
+  const places = Array.isArray(obj.places) ? obj.places : [];
+  return { region, places, demo: false };
 }
 
 function json(obj, status = 200) {
@@ -118,7 +189,7 @@ export default {
     const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
     if (rateLimited(ip)) return json({ error: '请求过于频繁，请稍后再试' }, 429);
     try {
-      if (p === '/api/config') return json({ llm: !!env.LLM_API_KEY, amap: !!env.AMAP_KEY, model: env.LLM_MODEL || 'qwen-flash' });
+      if (p === '/api/config') return json({ llm: !!env.LLM_API_KEY, amap: !!env.AMAP_KEY, model: env.LLM_MODEL || DEFAULT_MODEL });
       if (p === '/api/extract' && request.method === 'POST') {
         const b = await request.json().catch(() => ({}));
         const out = await extractPlaces((b.text || '').trim(), (b.geo || '').trim(), env);
@@ -127,7 +198,12 @@ export default {
           const c = await geocode(pl.name, amapKey);
           return c ? { ...pl, lng: c.lng, lat: c.lat, wgs: c.wgs } : pl;
         }));
-        return json({ places: enriched, demo: !!out.demo });
+        return json({ region: out.region, places: enriched, demo: !!out.demo });
+      }
+      if (p === '/api/parse-link' && request.method === 'POST') {
+        const b = await request.json().catch(() => ({}));
+        const out = await parseLink(b.url || '');
+        return json(out, out.error ? 422 : 200);
       }
       if (p === '/api/geocode' && request.method === 'POST') {
         const b = await request.json().catch(() => ({}));
