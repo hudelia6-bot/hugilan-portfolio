@@ -74,9 +74,11 @@ function gcj2wgs(lng, lat) {
   return [wgLng, wgLat];
 }
 
-async function geocode(name, amapKey) {
+async function geocode(name, amapKey, city) {
   if (!amapKey || !name) return null;
-  const u = `https://restapi.amap.com/v3/geocode/geo?address=${encodeURIComponent(name)}&key=${amapKey}`;
+  const params = new URLSearchParams({ address: name, key: amapKey });
+  if (city) params.set('city', city);
+  const u = `https://restapi.amap.com/v3/geocode/geo?${params.toString()}`;
   try {
     const r = await fetch(u); const d = await r.json();
     if (d.status === '1' && d.geocodes && d.geocodes[0] && d.geocodes[0].location) {
@@ -199,7 +201,7 @@ export default {
         const out = await extractPlaces((b.text || '').trim(), (b.geo || '').trim(), env);
         const amapKey = env.AMAP_KEY || '';
         const enriched = await Promise.all(out.places.map(async (pl) => {
-          const c = await geocode(pl.name, amapKey);
+          const c = await geocode(pl.name, amapKey, out.region);
           return c ? { ...pl, lng: c.lng, lat: c.lat, wgs: c.wgs } : pl;
         }));
         return json({ region: out.region, places: enriched, demo: !!out.demo });
