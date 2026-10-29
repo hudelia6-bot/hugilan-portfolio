@@ -128,12 +128,16 @@ async function parseLink(rawUrl) {
   if (dm) desc = unesc(dm[1]);
   if (!title) { const tt = html.match(/<title[^>]*>([^<]+)<\/title>/i); title = (tt ? tt[1] : '') || metaOf('og:title'); }
   if (!desc) desc = metaOf('og:description') || metaOf('description');
+  let geo = '';
+  const poi = html.match(/"poi_name":"((?:[^"\\]|\\.)*)"/i) || html.match(/"poiName":"((?:[^"\\]|\\.)*)"/i);
+  if (poi) geo = unesc(poi[1]);
+  if (!geo) { const ip = html.match(/"ip_location":"((?:[^"\\]|\\.)*)"/i) || html.match(/"ipLocation":"((?:[^"\\]|\\.)*)"/i); if (ip) geo = unesc(ip[1]); }
   title = (title || '').replace(/\s*[—\-]\s*小红书.*$/i, '').trim();
   desc = (desc || '').trim();
   const text = [title, desc].filter(Boolean).join('\n').trim();
   if (!text) return { error: '没解析到正文：小红书常需要登录，可能被拦截。请手动复制粘贴笔记内容。' };
   let host = ''; try { host = new URL(target).hostname; } catch {}
-  return { title, text, source: host };
+  return { title, text, geo: geo || '', source: host };
 }
 
 const SYSTEM_PROMPT = '你是地点抽取器。从旅行笔记中完成两件事：\n' +

@@ -127,21 +127,18 @@
     <h1>不装 App，把旅行笔记<br><em>变成你的地图收藏</em></h1>
     <p class="lead">粘贴一篇小红书 / 公众号旅行笔记，AI 抽出地点，一键打开苹果、高德、谷歌地图收藏。尤其适合国外出行、用地图软件标记地点的人。</p>
     <div class="steps">
-      <div class="step"><i>01</i><div><b>粘贴笔记</b><span>正文或链接，可补笔记自带定位</span></div></div>
+      <div class="step"><i>01</i><div><b>粘贴链接</b><span>正文作备选，定位自动识别</span></div></div>
       <div class="step"><i>02</i><div><b>AI 提取地点</b><span>识别城市 / 景点 / 餐厅 / 店铺</span></div></div>
       <div class="step"><i>03</i><div><b>打开地图收藏</b><span>跳转对应地图，存进收藏夹</span></div></div>
     </div>
   </div>
 
   <div class="card">
-    <label for="note">旅行笔记正文</label>
-    <textarea id="note" rows="9" placeholder="粘贴小红书 / 公众号 / 朋友分享的旅行笔记正文……"></textarea>
+    <label for="link">粘贴笔记链接（推荐）</label>
+    <input id="link" type="text" placeholder="小红书分享链接，带文字也能自动识别，定位自动抓取">
 
-    <label for="link">笔记链接（可选，粘贴带文字的分享内容也能自动识别）</label>
-    <input id="link" type="text" placeholder="https://xhslink.com/... 或 https://www.xiaohongshu.com/...">
-
-    <label for="geo">笔记自带定位 POI（可选）</label>
-    <input id="geo" type="text" placeholder="例如：杭州·西湖风景名胜区">
+    <label for="note">或直接粘贴正文（备选）</label>
+    <textarea id="note" rows="9" placeholder="没有链接时，直接粘贴笔记正文……"></textarea>
 
     <div class="row">
       <button class="primary" id="extract">提取地点</button>
@@ -155,6 +152,12 @@
     <div class="section-head">
       <strong>提取结果</strong>
       <div class="row" style="margin-top:0">
+        <select id="openPlatform" style="min-height:40px;padding:0 10px;font-size:13px;border:1px solid var(--line);border-radius:12px;background:#fff">
+          <option value="apple">苹果地图</option>
+          <option value="amap">高德地图</option>
+          <option value="google">谷歌地图</option>
+        </select>
+        <button id="openAll" style="min-height:40px;padding:9px 14px;font-size:13px">逐个打开</button>
         <button id="copyNames" style="min-height:40px;padding:9px 14px;font-size:13px">复制地点列表</button>
         <button id="copyLinks" style="min-height:40px;padding:9px 14px;font-size:13px">复制全部地图链接</button>
       </div>
@@ -227,7 +230,7 @@ function render(places, region){
 
 function currentPlaces(){return [...document.querySelectorAll('.place')].map(r=>({name:r.querySelector('.name').value.trim(),lng:null,lat:null,wgs:null})).filter(x=>x.name);}
 
-$('sample').onclick=()=>{$('note').value=SAMPLE;$('link').value='';$('geo').value='西湖风景名胜区';};
+$('sample').onclick=()=>{$('note').value=SAMPLE;$('link').value='';};
 $('link').addEventListener('paste',()=>{setTimeout(()=>{const u=pickUrl($('link').value);if(u)$('link').value=u;},0);});
 $('copyNames').onclick=()=>{const t=currentPlaces().map(p=>p.name).join('、');navigator.clipboard?navigator.clipboard.writeText(t).then(()=>$('status').textContent='地点列表已复制'):$('status').textContent='复制失败';};
 $('copyLinks').onclick=()=>{
@@ -235,25 +238,42 @@ $('copyLinks').onclick=()=>{
   const lines=rows.map(r=>{const v=r.querySelector('.name').value.trim();const L=linksFor({name:v,lng:null,lat:null,wgs:null},REGION);return v+' | 苹果:'+L.apple+' | 高德:'+L.amap+' | 谷歌:'+L.google}).join('\n');
   navigator.clipboard?navigator.clipboard.writeText(lines).then(()=>$('status').textContent='地图链接已复制'):$('status').textContent='复制失败';
 };
+$('openAll').onclick=()=>{
+  const plat=$('openPlatform').value;
+  const links=[...document.querySelectorAll('.place')].map(r=>linksFor({name:r.querySelector('.name').value.trim(),lng:null,lat:null,wgs:null},REGION)[plat]).filter(Boolean);
+  if(!links.length){$('status').textContent='暂无可打开的地点';return;}
+  let i=0;
+  const step=()=>{ if(i>=links.length){$('status').textContent='已尝试打开 '+links.length+' 个地点';return;} window.open(links[i],'_blank'); i++; setTimeout(step,700); };
+  step();
+  $('status').textContent='正在逐个打开（若被浏览器拦截，请允许弹窗或改用「复制全部地图链接」）';
+};
 function renderDemo(){render([{name:'西湖',type:'景点'},{name:'断桥',type:'景点'},{name:'河坊街',type:'商圈'},{name:'灵隐寺',type:'景点'},{name:'龙井村',type:'景点'},{name:'满觉陇',type:'住宿'},{name:'杭州东站',type:'交通'}],'杭州');}
 
 $('extract').onclick=async()=>{
+  const rawLink=$('link').value.trim();
+  const link=pickUrl(rawLink)||rawLink;
   let text=$('note').value.trim();
-  const link=pickUrl($('link').value)||$('link').value.trim();
-  const geo=$('geo').value.trim();
-  if(!text && link){
+  let geo='';
+  if(link){
     $('status').textContent='正在解析链接…';
     try{
       const r=await fetch(API_BASE+'/api/parse-link',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:link})});
       const d=await r.json();
-      if(d.error){$('status').textContent=d.error;return;}
-      $('note').value=d.text;
-      text=d.text;
-      $('status').textContent='已解析链接内容，正在提取…';
-    }catch(e){$('status').textContent='链接解析失败：请手动粘贴正文';return;}
+      if(d.error){
+        if(text){ $('status').textContent='链接解析失败，改用正文'; }
+        else { $('status').textContent=d.error; return; }
+      } else {
+        text=d.text||text;
+        geo=d.geo||'';
+        if(d.text) $('note').value=d.text;
+        $('status').textContent=geo?('已解析链接，自带定位：'+geo+'，正在提取…'):'已解析链接，正在提取…';
+      }
+    }catch(e){
+      if(!text){ $('status').textContent='链接解析失败，请手动粘贴正文'; return; }
+    }
   }
-  if(!text){$('status').textContent='请粘贴笔记正文或链接';return}
-  if(!hasServer){ renderDemo(); $('status').textContent='演示模式：未检测到后端（部署后请在配置里填 Worker 地址）'; return; }
+  if(!text){$('status').textContent='请粘贴链接或正文';return}
+  if(!hasServer){ renderDemo(); $('status').textContent='演示模式：未检测到后端'; return; }
   $('status').textContent='提取中…';
   try{
     const r=await fetch(API_BASE+'/api/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,geo})});
