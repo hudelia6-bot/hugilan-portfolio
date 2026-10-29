@@ -97,8 +97,9 @@ function unesc(s) {
     .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'");
 }
 
+function pickUrlFromText(s) { const m = (s || '').match(/https?:\/\/[^\s"'<>]+/i); return m ? m[0].replace(/[），。、；;】)]+$/, '').trim() : ''; }
 async function parseLink(rawUrl) {
-  let target = (rawUrl || '').trim();
+  let target = pickUrlFromText(rawUrl) || (rawUrl || '').trim();
   if (!target) return { error: '请先粘贴笔记链接' };
   if (!/^https?:\/\//i.test(target)) target = 'https://' + target;
   let html;

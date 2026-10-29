@@ -137,7 +137,7 @@
     <label for="note">旅行笔记正文</label>
     <textarea id="note" rows="9" placeholder="粘贴小红书 / 公众号 / 朋友分享的旅行笔记正文……"></textarea>
 
-    <label for="link">笔记链接（可选，粘贴后自动解析正文）</label>
+    <label for="link">笔记链接（可选，粘贴带文字的分享内容也能自动识别）</label>
     <input id="link" type="text" placeholder="https://xhslink.com/... 或 https://www.xiaohongshu.com/...">
 
     <label for="geo">笔记自带定位 POI（可选）</label>
@@ -149,17 +149,6 @@
       <span class="status" id="status"></span>
     </div>
 
-    <details>
-      <summary>模型配置（默认已接好，一般不用动）</summary>
-      <div class="cfg-grid" style="margin-top:12px">
-        <div><label>服务端 API 地址（留空用默认）</label><input id="srvBase" type="text" placeholder="https://luji-map.hudelia6.workers.dev"></div>
-        <div><label>API Base（无后端直连时用）</label><input id="apiBase" type="text" placeholder="https://dashscope.aliyuncs.com/compatible-mode/v1"></div>
-        <div><label>API Key（无后端直连时用）</label><input id="apiKey" type="password" placeholder="sk-..."></div>
-        <div><label>Model</label><input id="model" type="text" placeholder="qwen-flash"></div>
-      </div>
-      <div class="row"><button id="saveCfg">保存配置</button></div>
-      <p class="hint">Key 只存你自己的浏览器 localStorage，不上传；正常走服务端时无需填写。</p>
-    </details>
   </div>
 
   <div class="card" id="output" style="display:none">
@@ -185,7 +174,8 @@
 <script>
 const $=id=>document.getElementById(id);
 const DEFAULT_SRV='https://luji-map.hudelia6.workers.dev';
-let API_BASE=(localStorage.getItem('srvBase')||DEFAULT_SRV).replace(/\/$/,'');
+const API_BASE=DEFAULT_SRV;
+function pickUrl(s){const m=(s||'').match(/https?:\/\/[^\s"'<>]+/i);return m?m[0].replace(/[），。、；;】)]+$/,'').trim():'';}
 let hasServer=false;
 let REGION='';
 async function probeServer(){ try{ const r=await fetch(API_BASE+'/api/config',{cache:'no-store'}); hasServer=r.ok; }catch{ hasServer=false; } }
@@ -238,36 +228,18 @@ function render(places, region){
 function currentPlaces(){return [...document.querySelectorAll('.place')].map(r=>({name:r.querySelector('.name').value.trim(),lng:null,lat:null,wgs:null})).filter(x=>x.name);}
 
 $('sample').onclick=()=>{$('note').value=SAMPLE;$('link').value='';$('geo').value='西湖风景名胜区';};
+$('link').addEventListener('paste',()=>{setTimeout(()=>{const u=pickUrl($('link').value);if(u)$('link').value=u;},0);});
 $('copyNames').onclick=()=>{const t=currentPlaces().map(p=>p.name).join('、');navigator.clipboard?navigator.clipboard.writeText(t).then(()=>$('status').textContent='地点列表已复制'):$('status').textContent='复制失败';};
 $('copyLinks').onclick=()=>{
   const rows=[...document.querySelectorAll('.place')];
   const lines=rows.map(r=>{const v=r.querySelector('.name').value.trim();const L=linksFor({name:v,lng:null,lat:null,wgs:null},REGION);return v+' | 苹果:'+L.apple+' | 高德:'+L.amap+' | 谷歌:'+L.google}).join('\n');
   navigator.clipboard?navigator.clipboard.writeText(lines).then(()=>$('status').textContent='地图链接已复制'):$('status').textContent='复制失败';
 };
-$('saveCfg').onclick=()=>{localStorage.setItem('srvBase',$('srvBase').value.trim());API_BASE=($('srvBase').value.trim()||DEFAULT_SRV).replace(/\/$/,'');probeServer();localStorage.setItem('base',$('apiBase').value.trim());localStorage.setItem('key',$('apiKey').value.trim());localStorage.setItem('model',$('model').value.trim()||'qwen-flash');$('status').textContent='配置已保存（仅本机浏览器）';};
-function loadCfg(){return {base:localStorage.getItem('base')||'',key:localStorage.getItem('key')||'',model:localStorage.getItem('model')||'qwen-flash'};}
 function renderDemo(){render([{name:'西湖',type:'景点'},{name:'断桥',type:'景点'},{name:'河坊街',type:'商圈'},{name:'灵隐寺',type:'景点'},{name:'龙井村',type:'景点'},{name:'满觉陇',type:'住宿'},{name:'杭州东站',type:'交通'}],'杭州');}
-
-async function extractStatic(text,geo){
-  const c=loadCfg();
-  if(!c.key||!c.base){renderDemo();$('status').textContent='演示模式：未配置模型，已用内置示例地点';return}
-  $('status').textContent='提取中…';
-  const sys='你是地点抽取器。从旅行笔记中抽取城市/国家（region）与具体地点（places），只返回 JSON 对象 {"region":"...","places":[{"name":"...","type":"景点|餐饮|住宿|交通|商圈|其他"}]}。只抽取可定位的具体地名或完整店名（如「卢浮宫」「刘姥姥蟹黄包」），菜名/品类/物品一律不抽（如「蟹黄包」「奶茶」）。';
-  const user='笔记自带定位：'+(geo||'无')+'\n\n笔记正文：\n'+text;
-  try{
-    const r=await fetch(c.base.replace(/\/$/,'')+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+c.key},body:JSON.stringify({model:c.model,messages:[{role:'system',content:sys},{role:'user',content:user}],temperature:0.1,response_format:{type:'json_object'}})});
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    const d=await r.json();let raw=d.choices&&d.choices[0]&&d.choices[0].message.content||'';raw=raw.replace(/```json|```/g,'').trim();
-    const obj=JSON.parse(raw);
-    const places=Array.isArray(obj)?obj:(obj.places||[]);
-    const region=Array.isArray(obj)?'':(obj.region||'');
-    render(places,region);$('status').textContent='已提取 '+places.length+' 个地点';
-  }catch(e){$('status').textContent='提取失败：'+e.message;}
-}
 
 $('extract').onclick=async()=>{
   let text=$('note').value.trim();
-  const link=$('link').value.trim();
+  const link=pickUrl($('link').value)||$('link').value.trim();
   const geo=$('geo').value.trim();
   if(!text && link){
     $('status').textContent='正在解析链接…';
