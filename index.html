@@ -191,17 +191,16 @@ function linksFor(p, region){
   const name=(p.name||'').trim()||'地点';
   const ctx=(region?region+' ':'');
   const q=encodeURIComponent(ctx+name);
-  if(p.lng!=null&&p.lat!=null&&p.wgs){
-    const wLat=p.wgs[0], wLng=p.wgs[1];
-    return {
-      apple:'https://maps.apple.com/?q='+q+'&ll='+wLat+','+wLng,
-      amap:'https://uri.amap.com/marker?position='+p.lng+','+p.lat+'&name='+encodeURIComponent(ctx+name)+'&coordinate=gaode&callnative=1',
-      google:'https://www.google.com/maps/search/?api=1&query='+wLat+','+wLng
-    };
+  // 苹果/谷歌用名称检索（规避国内 GCJ-02/WGS-84 偏移）；高德有坐标时用精确落点
+  let amap;
+  if(p.lng!=null&&p.lat!=null){
+    amap='https://uri.amap.com/marker?position='+p.lng+','+p.lat+'&name='+encodeURIComponent(ctx+name)+'&coordinate=gaode&callnative=1';
+  } else {
+    amap='https://uri.amap.com/search?keyword='+q+'&view=map';
   }
   return {
     apple:'https://maps.apple.com/?q='+q,
-    amap:'https://uri.amap.com/search?keyword='+q+'&view=map',
+    amap:amap,
     google:'https://www.google.com/maps/search/?api=1&query='+q
   };
 }
