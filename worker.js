@@ -131,7 +131,6 @@ async function parseLink(rawUrl) {
   let geo = '';
   const poi = html.match(/"poi_name":"((?:[^"\\]|\\.)*)"/i) || html.match(/"poiName":"((?:[^"\\]|\\.)*)"/i);
   if (poi) geo = unesc(poi[1]);
-  if (!geo) { const ip = html.match(/"ip_location":"((?:[^"\\]|\\.)*)"/i) || html.match(/"ipLocation":"((?:[^"\\]|\\.)*)"/i); if (ip) geo = unesc(ip[1]); }
   title = (title || '').replace(/\s*[—\-]\s*小红书.*$/i, '').trim();
   desc = (desc || '').trim();
   const text = [title, desc].filter(Boolean).join('\n').trim();
