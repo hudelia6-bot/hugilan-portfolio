@@ -1,4 +1,4 @@
-const CACHE = 'luji-map-v1';
+const CACHE = 'luji-map-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -25,6 +25,21 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
   if (url.pathname.startsWith('/api/')) return; // API 不缓存
+
+  const isHtml = e.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html');
+  if (isHtml) {
+    // 页面：网络优先，保证永远是最新版本；离线时才用缓存
+    e.respondWith(
+      fetch(e.request).then((res) => {
+        const clone = res.clone();
+        caches.open(CACHE).then((c) => c.put(e.request, clone));
+        return res;
+      }).catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // 静态资源：缓存优先，后台更新
   e.respondWith(
     caches.match(e.request).then((cached) => {
       const fetched = fetch(e.request).then((res) => {

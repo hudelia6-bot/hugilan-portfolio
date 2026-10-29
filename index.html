@@ -180,11 +180,8 @@ const $=id=>document.getElementById(id);
 const DEFAULT_SRV='https://luji-map.hudelia6.workers.dev';
 const API_BASE=DEFAULT_SRV;
 function pickUrl(s){const m=(s||'').match(/https?:\/\/[^\s"'<>]+/i);return m?m[0].replace(/[），。、；;】)]+$/,'').trim():'';}
-let hasServer=false;
 let REGION='';
 let PLACES_DATA=[];
-async function probeServer(){ try{ const r=await fetch(API_BASE+'/api/config',{cache:'no-store'}); hasServer=r.ok; }catch{ hasServer=false; } }
-probeServer();
 const SAMPLE='上周去了杭州，从西湖边骑车到断桥，晚上在河坊街逛吃；第二天上午去了灵隐寺，下午到龙井村喝茶，住在满觉陇，回程从杭州东站坐车。';
 
 function linksFor(p, region){
@@ -287,7 +284,6 @@ $('extract').onclick=async()=>{
     }
   }
   if(!text){$('status').textContent='请粘贴链接或正文';return}
-  if(!hasServer){ renderDemo(); $('status').textContent='演示模式：未检测到后端'; return; }
   $('status').textContent='提取中…';
   try{
     const r=await fetch(API_BASE+'/api/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,geo})});
@@ -295,7 +291,7 @@ $('extract').onclick=async()=>{
     if(d.error)throw new Error(d.error);
     render(d.places,d.region);
     $('status').textContent=d.demo?'演示模式（服务端未配 LLM Key）':'已提取 '+d.places.length+' 个地点'+(d.region?' · '+d.region:'');
-  }catch(e){ hasServer=false; renderDemo(); $('status').textContent='后端不可用，已切换演示模式'; }
+  }catch(e){ renderDemo(); $('status').textContent='后端不可用，已切换演示模式'; }
 };
 </script>
 <script>
