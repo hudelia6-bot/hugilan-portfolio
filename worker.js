@@ -17,7 +17,7 @@ const DEMO = {
 
 // —— 防滥用：来源校验 + 按 IP 限流（内存级，冷启动/多实例会重置；更强防护可再加 Turnstile 或 WAF 限流规则）——
 const RATE_WINDOW_MS = 60_000;
-const RATE_MAX = 10; // 每个 IP 每分钟最多 10 次请求
+const RATE_MAX = 30; // 每个 IP 每分钟最多 30 次请求（不含 /api/config）
 const rlHits = new Map();
 function rateLimited(ip) {
   const now = Date.now();
@@ -192,10 +192,10 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' } });
     const origin = request.headers.get('Origin');
     if (!originAllowed(origin, env)) return json({ error: 'forbidden origin' }, 403);
-    const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-    if (rateLimited(ip)) return json({ error: '请求过于频繁，请稍后再试' }, 429);
     try {
       if (p === '/api/config') return json({ llm: !!env.LLM_API_KEY, amap: !!env.AMAP_KEY, model: env.LLM_MODEL || DEFAULT_MODEL });
+      const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+      if (rateLimited(ip)) return json({ error: '操作太频繁了，请稍等几秒再试' }, 429);
       if (p === '/api/extract' && request.method === 'POST') {
         const b = await request.json().catch(() => ({}));
         const out = await extractPlaces((b.text || '').trim(), (b.geo || '').trim(), env);
