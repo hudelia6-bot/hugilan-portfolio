@@ -160,11 +160,12 @@
         <button id="openAll" style="min-height:40px;padding:9px 14px;font-size:13px">逐个打开</button>
         <button id="copyNames" style="min-height:40px;padding:9px 14px;font-size:13px">复制地点列表</button>
         <button id="copyLinks" style="min-height:40px;padding:9px 14px;font-size:13px">复制全部地图链接</button>
+        <button id="exportKml" style="min-height:40px;padding:9px 14px;font-size:13px">导出 KML</button>
       </div>
     </div>
     <div id="regionBadge" class="region" style="display:none"></div>
     <div id="list" class="places"></div>
-    <p class="footer-note">点击任一按钮会打开对应地图的地点卡片，再点「收藏 / 保存 / 添加到指南」即可永久存进地图。高德主要覆盖国内；国外地点建议用苹果 / 谷歌地图。</p>
+    <p class="footer-note">点击按钮打开对应地图地点卡片再收藏；「导出 KML」可整份导入 Google「我的地图」做攻略地图（需先配高德 key 出坐标）。高德主要覆盖国内；国外建议用苹果 / 谷歌。</p>
   </div>
 </div>
 
@@ -181,6 +182,7 @@ const API_BASE=DEFAULT_SRV;
 function pickUrl(s){const m=(s||'').match(/https?:\/\/[^\s"'<>]+/i);return m?m[0].replace(/[），。、；;】)]+$/,'').trim():'';}
 let hasServer=false;
 let REGION='';
+let PLACES_DATA=[];
 async function probeServer(){ try{ const r=await fetch(API_BASE+'/api/config',{cache:'no-store'}); hasServer=r.ok; }catch{ hasServer=false; } }
 probeServer();
 const SAMPLE='上周去了杭州，从西湖边骑车到断桥，晚上在河坊街逛吃；第二天上午去了灵隐寺，下午到龙井村喝茶，住在满觉陇，回程从杭州东站坐车。';
@@ -207,6 +209,7 @@ function linksFor(p, region){
 function render(places, region){
   $('output').style.display='block';
   REGION=(region||'').trim();
+  PLACES_DATA=places||[];
   const rb=$('regionBadge');
   if(REGION){ rb.textContent='📍 检索范围：'+REGION; rb.style.display='inline-flex'; } else { rb.style.display='none'; }
   const list=$('list');list.innerHTML='';
@@ -238,6 +241,18 @@ $('copyLinks').onclick=()=>{
   const lines=rows.map(r=>{const v=r.querySelector('.name').value.trim();const L=linksFor({name:v,lng:null,lat:null,wgs:null},REGION);return v+' | 苹果:'+L.apple+' | 高德:'+L.amap+' | 谷歌:'+L.google}).join('\n');
   navigator.clipboard?navigator.clipboard.writeText(lines).then(()=>$('status').textContent='地图链接已复制'):$('status').textContent='复制失败';
 };
+function escapeXml(s){return (s||'').replace(/[<>&'"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;'}[c]));}
+function exportKml(){
+  const rows=[...document.querySelectorAll('.place')];
+  const items=rows.map((r,i)=>({name:r.querySelector('.name').value.trim(),wgs:(PLACES_DATA[i]&&PLACES_DATA[i].wgs)||null})).filter(x=>x.name);
+  const withC=items.filter(x=>x.wgs);
+  const kml='<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n<name>旅记地图'+(REGION?' · '+REGION:'')+'</name>\n'+withC.map(x=>'<Placemark><name>'+escapeXml(x.name)+'</name><Point><coordinates>'+x.wgs[1]+','+x.wgs[0]+',0</coordinates></Point></Placemark>').join('\n')+'\n</Document>\n</kml>';
+  const blob=new Blob([kml],{type:'application/vnd.google-earth.kml+xml'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='旅记地图'+(REGION?'-'+REGION:'')+'.kml';document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  $('status').textContent=withC.length?('已导出 '+withC.length+' 个带坐标地点'+(items.length-withC.length?'，'+(items.length-withC.length)+' 个无坐标已跳过':'')):'没有带坐标的地点：请先配置高德 key 并重新提取';
+}
+$('exportKml').onclick=exportKml;
 $('openAll').onclick=()=>{
   const plat=$('openPlatform').value;
   const links=[...document.querySelectorAll('.place')].map(r=>linksFor({name:r.querySelector('.name').value.trim(),lng:null,lat:null,wgs:null},REGION)[plat]).filter(Boolean);
