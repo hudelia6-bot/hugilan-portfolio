@@ -23,3 +23,7 @@ demo/
 
 # Cloudflare Wrangler 本地缓存
 .wrangler/
+
+# 函数计算打包产物（不上传源码仓库）
+fc/*.zip
+fc/*.backup.js
