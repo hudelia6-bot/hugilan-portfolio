@@ -1,196 +1,260 @@
-<!doctype html>
-<html lang="zh-CN">
+<!DOCTYPE html>
+<html class="scroll-smooth" lang="zh-CN">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>旅记地图 · 旅行笔记转地图收藏</title>
+<meta name="description" content="粘贴一篇旅行笔记，AI 抽出地点，一键打开苹果 / 高德 / 谷歌地图收藏。不用下载 App。">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0E7490">
+<meta name="theme-color" content="#FAF9F6">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="旅记地图">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>旅记地图 · 不装 App，把旅行笔记变成地图收藏</title>
-<meta name="description" content="粘贴一篇旅行笔记，AI 抽出地点，一键打开苹果 / 高德 / 谷歌地图收藏。不用下载 App。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,600;1,6..96,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          linen: {
+            DEFAULT: '#FAF9F6', alt: '#F4F2EC', card: '#FFFFFF', border: '#E5E2DC',
+            borderLight: '#EEECE6', muted: '#6E6B65', whisper: '#9E9B93', dark: '#141413'
+          },
+          sola: { sky: '#00668a', skySoft: '#EBF4F8', skyMuted: '#92B7C8' }
+        },
+        fontFamily: {
+          serif: ['"Bodoni Moda"', '"Newsreader"', 'serif'],
+          sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          mono: ['"Space Mono"', 'monospace']
+        },
+        letterSpacing: { 'ultra-wide': '0.22em', 'editorial': '0.12em' }
+      }
+    }
+  }
+</script>
 <style>
-  :root{
-    --bg:#F5F4EF; --surface:#FFFFFF; --ink:#101418; --sub:#5A6472;
-    --line:rgba(16,20,24,.10); --line-soft:rgba(16,20,24,.06);
-    --accent:#0E7490; --accent-soft:rgba(14,116,144,.09);
-    --amber:#C2700D; --green:#15803D; --red:#B42318; --blue:#1D4ED8;
-  }
-  *{box-sizing:border-box}
-  html{scroll-behavior:smooth}
-  body{
-    margin:0;color:var(--ink);line-height:1.65;-webkit-font-smoothing:antialiased;
-    font-family:"Geist","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
-    background:
-      radial-gradient(1100px 560px at 88% -8%, rgba(14,116,144,.15), transparent 62%),
-      radial-gradient(840px 480px at -8% 6%, rgba(194,112,13,.10), transparent 60%),
-      var(--bg);
-    background-attachment:fixed;
-  }
-  ::selection{background:rgba(14,116,144,.18)}
-  a{color:var(--accent)}
-  .wrap{max-width:1080px;margin:0 auto;padding:22px 16px 88px}
-  @media(min-width:768px){.wrap{padding:42px 28px 110px}}
-
-  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);background:rgba(245,244,239,.8);border-bottom:1px solid var(--line-soft)}
-  .bar{max-width:1080px;margin:0 auto;height:62px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-  @media(min-width:768px){.bar{height:74px;padding:0 28px}}
-  .brand{display:flex;align-items:baseline;gap:10px;text-decoration:none;color:inherit}
-  .brand b{font-size:15px;font-weight:600;letter-spacing:-.01em}
-  .brand span{font-size:11px;font-family:"Space Mono",monospace;letter-spacing:.12em;color:var(--sub);white-space:nowrap}
-
-  .hero{padding:34px 0 22px;text-align:center}
-  @media(min-width:768px){.hero{padding:64px 0 30px}}
-  .kicker{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.16em;color:var(--accent);text-transform:uppercase;margin:0 0 14px;display:inline-flex;align-items:center;gap:8px}
-  .kicker::before,.kicker::after{content:"";width:18px;height:1px;background:rgba(14,116,144,.4);display:inline-block}
-  h1{font-size:32px;line-height:1.14;margin:0 auto 16px;font-weight:650;letter-spacing:-.025em;max-width:720px}
-  @media(min-width:768px){h1{font-size:54px}}
-  h1 em{font-family:"Newsreader",serif;font-style:italic;font-weight:400;color:var(--accent)}
-  .lead{color:var(--sub);font-size:15px;max-width:580px;margin:0 auto 24px;font-weight:300}
-  @media(min-width:768px){.lead{font-size:17px}}
-  .steps{display:grid;gap:10px;margin:0 auto 4px;max-width:720px;text-align:left}
-  @media(min-width:768px){.steps{grid-template-columns:repeat(3,1fr);gap:12px}}
-  .step{display:flex;gap:10px;align-items:flex-start;padding:13px 14px;border:1px solid var(--line-soft);border-radius:16px;background:rgba(255,255,255,.6)}
-  .step i{font-style:normal;font-family:"Space Mono",monospace;font-size:11px;color:var(--accent);min-width:22px;height:22px;border:1px solid rgba(14,116,144,.25);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-top:1px;background:var(--accent-soft)}
-  .step b{font-size:13.5px;font-weight:600;display:block}
-  .step span{font-size:12.5px;color:var(--sub);font-weight:300}
-
-  .card{border-radius:22px;padding:18px;margin:0 auto 20px;max-width:760px;background:rgba(255,255,255,.82);border:1px solid var(--line-soft);box-shadow:0 24px 50px -28px rgba(16,20,24,.22);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-  @media(min-width:768px){.card{padding:28px;border-radius:26px}}
-
-  label{display:block;font-size:12.5px;color:var(--sub);margin:14px 0 6px;font-weight:500}
-  label:first-child{margin-top:0}
-  textarea,input[type=text],input[type=password]{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:15px;font-family:inherit;background:#fff;color:var(--ink);transition:border-color .15s,box-shadow .15s}
-  textarea:focus,input:focus{outline:none;border-color:rgba(14,116,144,.55);box-shadow:0 0 0 3px var(--accent-soft)}
-  textarea{min-height:170px;line-height:1.6;resize:vertical}
-  .hint{font-size:12px;color:var(--sub);font-weight:300;margin-top:8px}
-
-  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center}
-  button{appearance:none;border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px 18px;font-size:14.5px;cursor:pointer;color:var(--ink);font-family:inherit;min-height:46px;transition:all .15s}
-  button:hover{border-color:rgba(14,116,144,.4)}
-  button:active{transform:translateY(1px)}
-  button.primary{background:linear-gradient(135deg,#0B6B83,#0E7490);border-color:transparent;color:#fff;font-weight:600;box-shadow:0 12px 26px -12px rgba(14,116,144,.65)}
-  button.primary:hover{filter:brightness(1.06);border-color:transparent}
-  .status{font-size:13px;color:var(--sub);min-height:22px;flex:1 1 180px}
-
-  details{margin-top:18px;border-top:1px dashed var(--line);padding-top:14px}
-  summary{cursor:pointer;font-size:12.5px;color:var(--sub);font-weight:500}
-  .cfg-grid{display:grid;gap:0}
-  @media(min-width:768px){.cfg-grid{grid-template-columns:1fr 1fr;gap:14px}}
-
-  .places{display:grid;gap:14px}
-  @media(min-width:768px){.places{grid-template-columns:1fr 1fr}}
-  .place{border:1px solid var(--line-soft);border-radius:18px;padding:15px;background:#fff;box-shadow:0 10px 30px -22px rgba(16,20,24,.3)}
-  .place-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-  .tag{font-size:11px;color:var(--accent);background:var(--accent-soft);border:1px solid rgba(14,116,144,.18);border-radius:99px;padding:3px 11px;white-space:nowrap;font-family:"Space Mono",monospace;letter-spacing:.03em}
-  .badge{font-size:11px;color:var(--green);background:rgba(21,128,61,.08);border:1px solid rgba(21,128,61,.2);border-radius:99px;padding:3px 10px;white-space:nowrap}
-  .place input.name{width:100%;border:1px solid var(--line-soft);border-radius:10px;padding:10px 12px;font-size:15px;font-family:inherit;background:var(--bg)}
-  .mapbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
-  .mapbtns a{text-decoration:none;font-size:13px;font-weight:500;border-radius:11px;padding:10px 4px;text-align:center;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2;border:1px solid transparent}
-  .mapbtns a small{display:block;font-size:9.5px;font-weight:400;opacity:.75;font-family:"Space Mono",monospace;letter-spacing:.02em;margin-top:2px}
-  .mapbtns a.apple{color:#0B0B0B;background:#F1F1F0;border-color:rgba(11,11,11,.12)}
-  .mapbtns a.amap{color:var(--accent);background:var(--accent-soft);border-color:rgba(14,116,144,.22)}
-  .mapbtns a.google{color:var(--blue);background:rgba(29,78,216,.07);border-color:rgba(29,78,216,.18)}
-  .mapbtns a:hover{filter:brightness(.97)}
-  .place .del{margin-top:10px;width:100%;border-color:rgba(180,35,24,.22);color:var(--red);background:rgba(180,35,24,.04);font-size:12.5px;min-height:36px}
-
-  .region{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--accent);background:var(--accent-soft);border:1px solid rgba(14,116,144,.22);border-radius:99px;padding:5px 13px;margin-bottom:14px;font-weight:500}
-  .section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-  .section-head strong{font-size:16px}
-  .footer-note{font-size:12px;color:var(--sub);font-weight:300;margin-top:14px}
-
-  footer{border-top:1px solid var(--line-soft);padding:28px 16px 52px;color:var(--sub);font-size:12px;text-align:center}
-  footer .inner{max-width:1080px;margin:0 auto}
+  html, body { margin:0; padding:0; background-color:#FAF9F6; color:#141413; font-feature-settings:"cv02","cv03","cv04","cv11"; }
+  ::selection { background-color:#141413; color:#FAF9F6; }
+  .material-symbols-outlined { font-variation-settings:'FILL' 0,'wght' 280,'GRAD' 0,'opsz' 18; }
+  .hairline-border { box-shadow: inset 0 0 0 1px #E5E2DC; }
+  .line-clamp-2 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  #list a:active { transform: scale(.98); }
 </style>
 </head>
-<body>
+<body class="min-h-screen bg-[#FAF9F6] text-linen-dark font-sans antialiased selection:bg-linen-dark selection:text-linen flex flex-col justify-between relative overflow-x-hidden">
 
-<header>
-  <div class="bar">
-    <a class="brand" href="./">
-      <b>旅记地图</b>
-      <span>NO-APP · MAP SAVE</span>
-    </a>
+<!-- Architectural Background Fine Grid Lines -->
+<div class="fixed inset-0 pointer-events-none z-0 opacity-40 max-w-7xl mx-auto px-6 lg:px-12 flex justify-between">
+  <div class="w-px h-full bg-[#E5E2DC]/60"></div>
+  <div class="w-px h-full bg-[#E5E2DC]/40 hidden md:block"></div>
+  <div class="w-px h-full bg-[#E5E2DC]/40 hidden md:block"></div>
+  <div class="w-px h-full bg-[#E5E2DC]/60"></div>
+</div>
+
+<!-- Editorial Top Bar -->
+<header class="relative z-30 w-full border-b border-[#E5E2DC] bg-[#FAF9F6]/90 backdrop-blur-md">
+  <div class="max-w-7xl mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-6">
+      <a class="flex items-center gap-3 group" href="#">
+        <span class="w-7 h-7 rounded-sm bg-linen-dark text-[#FAF9F6] font-serif flex items-center justify-center text-xs font-medium tracking-tight group-hover:bg-sola-sky transition-colors duration-300">旅</span>
+        <div class="flex items-baseline gap-2">
+          <span class="font-serif text-lg tracking-tight font-medium text-linen-dark">旅记地图</span>
+          <span class="font-mono text-[10px] text-linen-whisper tracking-wider uppercase">NO-APP · MAP SAVE</span>
+        </div>
+      </a>
+      <div class="hidden md:flex items-center gap-2 pl-6 border-l border-[#E5E2DC]">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span class="font-mono text-[10px] text-linen-whisper tracking-editorial uppercase">WGS-84 / GCJ-02 Calibrated</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-6 text-xs tracking-editorial uppercase font-medium">
+      <a class="text-linen-muted hover:text-linen-dark transition-colors py-1 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-px after:bg-linen-dark hover:after:w-full after:transition-all" href="#about">使用说明</a>
+      <button class="text-linen-muted hover:text-linen-dark transition-colors py-1 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-px after:bg-linen-dark hover:after:w-full after:transition-all" id="btnFeedback">反馈</button>
+    </div>
   </div>
 </header>
 
-<div class="wrap">
-  <div class="hero">
-    <p class="kicker">Travel Note → Map Collection</p>
-    <h1>不装 App，把旅行笔记<br><em>变成你的地图收藏</em></h1>
-    <p class="lead">粘贴一篇小红书 / 公众号旅行笔记，AI 抽出地点，一键打开苹果、高德、谷歌地图收藏。尤其适合国外出行、用地图软件标记地点的人。</p>
-    <div class="steps">
-      <div class="step"><i>01</i><div><b>粘贴链接</b><span>正文作备选，定位自动识别</span></div></div>
-      <div class="step"><i>02</i><div><b>AI 提取地点</b><span>识别城市 / 景点 / 餐厅 / 店铺</span></div></div>
-      <div class="step"><i>03</i><div><b>打开地图收藏</b><span>跳转对应地图，存进收藏夹</span></div></div>
+<!-- Main Editorial Canvas -->
+<main class="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-12 pt-16 lg:pt-24 pb-24 flex-1">
+
+  <!-- Hero -->
+  <div class="text-center max-w-3xl mx-auto mb-16 lg:mb-20">
+    <div class="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full border border-[#E5E2DC] bg-[#FAF9F6] text-[10px] font-mono tracking-ultra-wide uppercase text-linen-muted">
+      <span>Map Extractor &amp; Curation</span>
+      <span class="text-linen-whisper">/</span>
+      <span>Edition 2025</span>
+    </div>
+    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-serif font-normal text-linen-dark tracking-tight leading-[1.12] mb-5">粘贴笔记，提取地点</h1>
+    <p class="text-sm sm:text-base text-linen-muted font-light leading-relaxed max-w-xl mx-auto">支持小红书、微信公众号链接或文字攻略，一键呼起地图并加入收藏。不装 App，尤其适合用地图软件收藏出行地点的人。</p>
+  </div>
+
+  <!-- Input Card -->
+  <div class="w-full max-w-3xl mx-auto mb-20 lg:mb-24">
+    <div class="bg-white rounded-none border border-[#E5E2DC] shadow-[0_12px_40px_-15px_rgba(20,20,19,0.06)] p-3 lg:p-4 transition-all focus-within:border-linen-dark focus-within:shadow-[0_20px_50px_-15px_rgba(20,20,19,0.1)]">
+      <div class="flex items-center justify-between px-2 pt-1 pb-3 border-b border-[#E5E2DC] text-xs">
+        <div class="flex items-center gap-1.5">
+          <button class="px-3 py-1.5 text-xs font-medium tracking-editorial uppercase bg-linen-dark text-[#FAF9F6] transition-all" id="tabLink">链接模式</button>
+          <button class="px-3 py-1.5 text-xs font-medium tracking-editorial uppercase text-linen-muted hover:text-linen-dark hover:bg-linen-alt transition-all" id="tabText">文本笔记</button>
+        </div>
+        <button class="text-[11px] font-mono text-linen-whisper hover:text-linen-dark tracking-wider transition-colors flex items-center gap-1" id="btnClear">
+          <span class="material-symbols-outlined text-[13px]">close</span><span>清空内容</span>
+        </button>
+      </div>
+
+      <div class="pt-3 px-1">
+        <div class="relative flex items-center" id="linkInputWrap">
+          <span class="material-symbols-outlined absolute left-3 text-linen-whisper text-[18px]">link</span>
+          <input class="w-full pl-10 pr-36 py-3 text-sm bg-transparent border-0 focus:ring-0 text-linen-dark placeholder:text-linen-whisper font-sans font-light tracking-wide" id="mainInput" type="text" placeholder="粘贴小红书 / 公众号文章链接，带文字也能自动识别">
+          <button class="absolute right-1 px-5 py-2.5 bg-linen-dark hover:bg-stone-800 text-[#FAF9F6] text-xs font-medium tracking-editorial uppercase transition-all duration-200 active:scale-[0.98] flex items-center gap-2 group" id="btnParse">
+            <span>提取地点</span>
+            <span class="material-symbols-outlined text-[14px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+          </button>
+        </div>
+
+        <div class="hidden" id="textInputWrap">
+          <textarea class="w-full p-3 text-sm bg-transparent border-0 focus:ring-0 text-linen-dark placeholder:text-linen-whisper resize-none font-sans font-light tracking-wide" id="textInput" placeholder="直接粘贴游记文本、微信群清单或备忘录笔记……" rows="4"></textarea>
+          <div class="flex justify-end pb-1 pr-1 border-t border-linen-borderLight pt-2">
+            <button class="px-5 py-2 bg-linen-dark hover:bg-stone-800 text-[#FAF9F6] text-xs font-medium tracking-editorial uppercase transition-all duration-200 active:scale-[0.98] flex items-center gap-2 group" id="btnParseText">
+              <span>提取地点</span>
+              <span class="material-symbols-outlined text-[14px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between mt-4 px-1 gap-2 text-xs text-linen-muted">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-[11px] font-mono text-linen-whisper tracking-wider">PRESETS:</span>
+        <button class="text-xs text-linen-dark hover:text-sola-sky underline underline-offset-4 decoration-[#E5E2DC] hover:decoration-sola-sky transition-colors font-light" id="sampleKyoto">京都 4 日</button>
+        <span class="text-linen-border">/</span>
+        <button class="text-xs text-linen-dark hover:text-sola-sky underline underline-offset-4 decoration-[#E5E2DC] hover:decoration-sola-sky transition-colors font-light" id="sampleDali">大理慢走</button>
+        <span class="text-linen-border">/</span>
+        <button class="text-xs text-linen-dark hover:text-sola-sky underline underline-offset-4 decoration-[#E5E2DC] hover:decoration-sola-sky transition-colors font-light" id="sampleParis">巴黎玛黑区</button>
+      </div>
+      <div class="text-[11px] font-mono text-linen-whisper tracking-wider uppercase" id="status">RAM PARSER · ZERO PERSISTENCE</div>
     </div>
   </div>
 
-  <div class="card">
-    <label for="link">粘贴笔记链接（推荐）</label>
-    <input id="link" type="text" placeholder="小红书分享链接，带文字也能自动识别，定位自动抓取">
-
-    <label for="note">或直接粘贴正文（备选）</label>
-    <textarea id="note" rows="9" placeholder="没有链接时，直接粘贴笔记正文……"></textarea>
-
-    <div class="row">
-      <button class="primary" id="extract">提取地点</button>
-      <button id="sample">载入示例</button>
-      <span class="status" id="status"></span>
-    </div>
-
-  </div>
-
-  <div class="card" id="output" style="display:none">
-    <div class="section-head">
-      <strong>提取结果</strong>
-      <div class="row" style="margin-top:0">
-        <select id="openPlatform" style="min-height:40px;padding:0 10px;font-size:13px;border:1px solid var(--line);border-radius:12px;background:#fff">
+  <!-- Output Section -->
+  <div class="w-full hidden" id="output">
+    <div class="flex flex-col md:flex-row md:items-end justify-between pb-6 mb-8 border-b border-[#E5E2DC] gap-4">
+      <div>
+        <div class="text-[10px] font-mono text-linen-whisper tracking-ultra-wide uppercase mb-1">CURATED POINTS OF INTEREST</div>
+        <div class="flex items-baseline gap-3">
+          <h2 class="font-serif text-2xl lg:text-3xl font-normal text-linen-dark tracking-tight">已提取地点</h2>
+          <span class="font-mono text-xs text-linen-muted tracking-wider" id="countLabel">0 处</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <select id="openPlatform" class="h-9 px-2 text-[11px] font-mono tracking-wider uppercase bg-white border border-[#E5E2DC] text-linen-muted focus:outline-none focus:border-linen-dark">
           <option value="apple">苹果地图</option>
           <option value="amap">高德地图</option>
           <option value="google">谷歌地图</option>
         </select>
-        <button id="openAll" style="min-height:40px;padding:9px 14px;font-size:13px">逐个打开</button>
-        <button id="copyNames" style="min-height:40px;padding:9px 14px;font-size:13px">复制地点列表</button>
-        <button id="copyLinks" style="min-height:40px;padding:9px 14px;font-size:13px">复制全部地图链接</button>
-        <button id="exportKml" style="min-height:40px;padding:9px 14px;font-size:13px">导出 KML</button>
+        <button id="btnOpenAll" class="h-9 px-3 text-[11px] font-mono tracking-wider uppercase bg-white border border-[#E5E2DC] text-linen-dark hover:bg-linen-alt transition-colors">逐个打开</button>
+        <button id="btnCopyText" class="h-9 px-3 text-[11px] font-mono tracking-wider uppercase bg-white border border-[#E5E2DC] text-linen-dark hover:bg-linen-alt transition-colors">复制列表</button>
+        <button id="btnCopyLinks" class="h-9 px-3 text-[11px] font-mono tracking-wider uppercase bg-white border border-[#E5E2DC] text-linen-dark hover:bg-linen-alt transition-colors">复制链接</button>
+        <button id="btnExportKML" class="h-9 px-3 text-[11px] font-mono tracking-wider uppercase bg-linen-dark text-[#FAF9F6] hover:bg-stone-800 transition-colors">导出 KML</button>
       </div>
     </div>
-    <div id="regionBadge" class="region" style="display:none"></div>
-    <div id="list" class="places"></div>
-    <p class="footer-note">点击按钮打开对应地图地点卡片再收藏；「导出 KML」可整份导入 Google「我的地图」做攻略地图（需先配高德 key 出坐标）。高德主要覆盖国内；国外建议用苹果 / 谷歌。</p>
-  </div>
-</div>
 
-<footer>
-  <div class="inner">
-    <p>© 2026 旅记地图 · 不装 App，把旅行笔记变成地图收藏。坐标采用 GCJ-02 / WGS-84 自动换算。</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5" id="list"></div>
+
+    <p class="mt-8 text-xs text-linen-muted font-light leading-relaxed">点击卡片下方按钮打开对应地图再收藏；「导出 KML」可整份导入 Google「我的地图」做攻略地图。高德主要覆盖国内，国外建议用苹果 / 谷歌；未定位到坐标的地点按名称检索。</p>
+  </div>
+
+  <!-- About -->
+  <div class="w-full max-w-5xl mx-auto mt-24 pt-10 border-t border-[#E5E2DC]" id="about">
+    <div class="text-[10px] font-mono text-linen-whisper tracking-ultra-wide uppercase mb-6">HOW IT WORKS</div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div class="bg-white border border-[#E5E2DC] p-6">
+        <span class="font-serif italic text-2xl text-linen-whisper">01</span>
+        <h3 class="font-serif text-lg mt-2 text-linen-dark">粘贴链接或正文</h3>
+        <p class="text-xs text-linen-muted mt-2 font-light leading-relaxed">小红书 / 公众号链接优先，正文作备选；笔记自带的定位也会被识别。</p>
+      </div>
+      <div class="bg-white border border-[#E5E2DC] p-6">
+        <span class="font-serif italic text-2xl text-linen-whisper">02</span>
+        <h3 class="font-serif text-lg mt-2 text-linen-dark">AI 提取地点</h3>
+        <p class="text-xs text-linen-muted mt-2 font-light leading-relaxed">识别城市范围与景点、餐厅、店铺，并按城市限定地理编码，避免同名误跳。</p>
+      </div>
+      <div class="bg-white border border-[#E5E2DC] p-6">
+        <span class="font-serif italic text-2xl text-linen-whisper">03</span>
+        <h3 class="font-serif text-lg mt-2 text-linen-dark">打开地图收藏</h3>
+        <p class="text-xs text-linen-muted mt-2 font-light leading-relaxed">逐个跳转苹果 / 高德 / 谷歌地图，或导出 KML 到 Google「我的地图」。</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="relative z-10 border-t border-[#E5E2DC] bg-[#FAF9F6]">
+  <div class="max-w-7xl mx-auto px-6 lg:px-12 py-8 flex flex-col md:flex-row items-center justify-between gap-3">
+    <div class="flex items-center gap-2 text-[11px] font-mono text-linen-whisper tracking-wider uppercase">
+      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+      <span>© 2026 旅记地图 · 坐标 GCJ-02 / WGS-84 自动换算</span>
+    </div>
+    <div class="text-[11px] font-mono text-linen-whisper tracking-wider uppercase">NO-APP · MAP SAVE</div>
   </div>
 </footer>
 
 <script>
-const $=id=>document.getElementById(id);
-const DEFAULT_SRV='https://luji-map-api-lijufduqee.cn-hangzhou.fcapp.run';
-const API_BASE=DEFAULT_SRV;
-function pickUrl(s){const m=(s||'').match(/https?:\/\/[^\s"'<>]+/i);return m?m[0].replace(/[），。、；;】)]+$/,'').trim():'';}
-let REGION='';
-let PLACES_DATA=[];
-const SAMPLE='上周去了杭州，从西湖边骑车到断桥，晚上在河坊街逛吃；第二天上午去了灵隐寺，下午到龙井村喝茶，住在满觉陇，回程从杭州东站坐车。';
+const $ = id => document.getElementById(id);
+const DEFAULT_SRV = 'https://luji-map-api-lijufduqee.cn-hangzhou.fcapp.run';
+const API_BASE = DEFAULT_SRV;
+
+function pickUrl(s){ const m=(s||'').match(/https?:\/\/[^\s"'<>]+/i); return m ? m[0].replace(/[），。、；;】)]+$/,'').trim() : ''; }
+
+let REGION = '';
+let PLACES_DATA = [];
+let MODE = 'link'; // link | text
+
+const SAMPLES = {
+  kyoto: '京都四日：第一天去伏见稻荷大社看千本鸟居，中午吃猪一拉面本店；第二天去八濑琉璃光院，下午逛惠文社一乘寺店；第三天去宇治，吃中村藤吉本店的抹茶。',
+  dali: '大理三天：在古城人民路闲逛，骑车去才村码头看洱海，傍晚去寂照庵看多肉，晚上吃段公子菌菇火锅。',
+  paris: '巴黎玛黑区：先逛毕加索博物馆，然后去 Merci 买手店，中午吃 L\'As du Fallafel，下午逛孚日广场。'
+};
+
+function setStatus(msg){ $('status').textContent = msg || 'RAM PARSER · ZERO PERSISTENCE'; }
+function setBusy(btn, busy, busyText){
+  if(!btn.dataset.orig) btn.dataset.orig = btn.innerHTML;
+  if(busy){ btn.innerHTML = '<span class="material-symbols-outlined text-[14px] animate-spin">refresh</span><span>'+(busyText||'解析中...')+'</span>'; btn.disabled = true; }
+  else { btn.innerHTML = btn.dataset.orig; btn.disabled = false; }
+}
+
+function setMode(mode){
+  MODE = mode;
+  const active = 'px-3 py-1.5 text-xs font-medium tracking-editorial uppercase bg-linen-dark text-[#FAF9F6] transition-all';
+  const idle = 'px-3 py-1.5 text-xs font-medium tracking-editorial uppercase text-linen-muted hover:text-linen-dark hover:bg-linen-alt transition-all';
+  $('tabLink').className = mode==='link' ? active : idle;
+  $('tabText').className = mode==='text' ? active : idle;
+  $('linkInputWrap').classList.toggle('hidden', mode!=='link');
+  $('textInputWrap').classList.toggle('hidden', mode!=='text');
+}
+$('tabLink').addEventListener('click', ()=>setMode('link'));
+$('tabText').addEventListener('click', ()=>setMode('text'));
+$('btnClear').addEventListener('click', ()=>{ $('mainInput').value=''; $('textInput').value=''; setStatus('RAM PARSER · ZERO PERSISTENCE'); if(MODE==='link') $('mainInput').focus(); else $('textInput').focus(); });
+
+$('sampleKyoto').addEventListener('click', ()=>{ setMode('text'); $('textInput').value = SAMPLES.kyoto; $('textInput').focus(); });
+$('sampleDali').addEventListener('click', ()=>{ setMode('text'); $('textInput').value = SAMPLES.dali; $('textInput').focus(); });
+$('sampleParis').addEventListener('click', ()=>{ setMode('text'); $('textInput').value = SAMPLES.paris; $('textInput').focus(); });
+
+$('mainInput').addEventListener('paste', ()=>setTimeout(()=>{ const u=pickUrl($('mainInput').value); if(u) $('mainInput').value=u; },0));
 
 function linksFor(p, region){
   const name=(p.name||'').trim()||'地点';
   const ctx=(region?region+' ':'');
   const q=encodeURIComponent(ctx+name);
-  // 苹果/谷歌用名称检索（规避国内 GCJ-02/WGS-84 偏移）；高德有坐标时用精确落点
   let amap;
-  if(p.lng!=null&&p.lat!=null){
+  if(p.lng!=null && p.lat!=null){
     amap='https://uri.amap.com/marker?position='+p.lng+','+p.lat+'&name='+encodeURIComponent(ctx+name)+'&coordinate=gaode&callnative=1';
   } else {
     amap='https://uri.amap.com/search?keyword='+q+'&view=map';
@@ -202,98 +266,162 @@ function linksFor(p, region){
   };
 }
 
+function fmtCoord(wgs){
+  if(!wgs || wgs.length<2) return null;
+  const lat=wgs[0], lng=wgs[1];
+  return Math.abs(lat).toFixed(4)+'° '+(lat>=0?'N':'S')+', '+Math.abs(lng).toFixed(4)+'° '+(lng>=0?'E':'W');
+}
+
 function render(places, region){
-  $('output').style.display='block';
+  $('output').classList.remove('hidden');
   REGION=(region||'').trim();
   PLACES_DATA=places||[];
-  const rb=$('regionBadge');
-  if(REGION){ rb.textContent='📍 检索范围：'+REGION; rb.style.display='inline-flex'; } else { rb.style.display='none'; }
-  const list=$('list');list.innerHTML='';
-  places.forEach((p)=>{
-    const row=document.createElement('div');row.className='place';
-    const top=document.createElement('div');top.className='place-top';
-    const tag=document.createElement('span');tag.className='tag';tag.textContent=(p.type||'地点').toUpperCase();
-    top.append(tag);
-    if(p.lng!=null){const b=document.createElement('span');b.className='badge';b.textContent='坐标已定位';top.append(b);}
-    const nm=document.createElement('input');nm.className='name';nm.value=p.name;
-    const btns=document.createElement('div');btns.className='mapbtns';
-    const mk=(label,sub,cls,u)=>{const a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener';a.className=cls;a.innerHTML=label+'<small>'+sub+'</small>';return a};
-    const upd=()=>{const v=nm.value.trim();const L=linksFor({name:v,lng:p.lng,lat:p.lat,wgs:p.wgs},REGION);btns.innerHTML='';btns.append(mk('苹果','Apple Maps','apple',L.apple),mk('高德','Amap','amap',L.amap),mk('谷歌','Google','google',L.google));};
-    nm.oninput=upd;
-    const del=document.createElement('button');del.className='del';del.textContent='删除这个地点';del.onclick=()=>row.remove();
-    row.append(top,nm,btns,del);
-    list.append(row);upd();
+  $('countLabel').textContent = places.length+' 处'+(REGION?' · '+REGION:'');
+  const list=$('list'); list.innerHTML='';
+
+  places.forEach((p,i)=>{
+    const L=linksFor(p, REGION);
+    const coord=fmtCoord(p.wgs);
+    const num=String(i+1).padStart(2,'0');
+    const tag=(p.type||'地点').toUpperCase();
+
+    const card=document.createElement('article');
+    card.className='group bg-white border border-[#E5E2DC] p-6 flex flex-col justify-between hover:border-linen-dark transition-all duration-300 relative shadow-[0_2px_12px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_30px_-10px_rgba(20,20,19,0.07)]';
+
+    card.innerHTML =
+      '<div class="absolute top-0 right-0 w-8 h-8 pointer-events-none border-t border-r border-transparent group-hover:border-linen-dark transition-all"></div>'+
+      '<div>'+
+        '<div class="flex items-center justify-between border-b border-linen-borderLight pb-3 mb-4">'+
+          '<span class="font-serif italic text-lg text-linen-whisper group-hover:text-linen-dark transition-colors">'+num+'</span>'+
+          '<span class="font-mono text-[10px] tracking-editorial uppercase text-linen-muted bg-linen-alt px-2 py-0.5 border border-linen-borderLight">'+tag+'</span>'+
+        '</div>'+
+        '<input class="name w-full font-serif text-lg font-medium text-linen-dark tracking-tight leading-snug bg-transparent border-0 focus:ring-0 p-0" value="'+p.name.replace(/"/g,'&quot;')+'" aria-label="地点名称">'+
+        '<div class="mt-3 flex items-center gap-1.5 text-[11px] font-mono text-linen-whisper">'+
+          '<span class="material-symbols-outlined text-[13px]">explore</span>'+
+          '<span>'+ (coord || 'NO COORD · SEARCH BY NAME') +'</span>'+
+        '</div>'+
+      '</div>'+
+      '<div class="mt-6 pt-4 border-t border-linen-borderLight grid grid-cols-3 gap-1.5 text-center" data-links></div>';
+
+    const nameEl=card.querySelector('.name');
+    const linksWrap=card.querySelector('[data-links]');
+    const paint=()=>{
+      const v=nameEl.value.trim();
+      const LL=linksFor({name:v,lng:p.lng,lat:p.lat,wgs:p.wgs}, REGION);
+      linksWrap.innerHTML =
+        '<a class="py-1.5 text-[11px] font-medium tracking-wide text-linen-muted hover:text-linen-dark bg-linen-alt/60 hover:bg-linen-alt border border-linen-borderLight transition-all" href="'+LL.apple+'" target="_blank" rel="noopener">苹果地图</a>'+
+        '<a class="py-1.5 text-[11px] font-medium tracking-wide text-linen-muted hover:text-linen-dark bg-linen-alt/60 hover:bg-linen-alt border border-linen-borderLight transition-all" href="'+LL.amap+'" target="_blank" rel="noopener">高德</a>'+
+        '<a class="py-1.5 text-[11px] font-medium tracking-wide text-linen-muted hover:text-linen-dark bg-linen-alt/60 hover:bg-linen-alt border border-linen-borderLight transition-all" href="'+LL.google+'" target="_blank" rel="noopener">谷歌</a>';
+    };
+    nameEl.addEventListener('input', paint);
+    list.append(card);
+    paint();
   });
-  $('output').scrollIntoView({behavior:'smooth',block:'start'});
+
+  $('output').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
-function currentPlaces(){return [...document.querySelectorAll('.place')].map(r=>({name:r.querySelector('.name').value.trim(),lng:null,lat:null,wgs:null})).filter(x=>x.name);}
+function currentPlaces(){
+  return [...document.querySelectorAll('#list .name')].map((el,i)=>({name:el.value.trim(), wgs:(PLACES_DATA[i]&&PLACES_DATA[i].wgs)||null})).filter(x=>x.name);
+}
 
-$('sample').onclick=()=>{$('note').value=SAMPLE;$('link').value='';};
-$('link').addEventListener('paste',()=>{setTimeout(()=>{const u=pickUrl($('link').value);if(u)$('link').value=u;},0);});
-$('copyNames').onclick=()=>{const t=currentPlaces().map(p=>p.name).join('、');navigator.clipboard?navigator.clipboard.writeText(t).then(()=>$('status').textContent='地点列表已复制'):$('status').textContent='复制失败';};
-$('copyLinks').onclick=()=>{
-  const rows=[...document.querySelectorAll('.place')];
-  const lines=rows.map(r=>{const v=r.querySelector('.name').value.trim();const L=linksFor({name:v,lng:null,lat:null,wgs:null},REGION);return v+' | 苹果:'+L.apple+' | 高德:'+L.amap+' | 谷歌:'+L.google}).join('\n');
-  navigator.clipboard?navigator.clipboard.writeText(lines).then(()=>$('status').textContent='地图链接已复制'):$('status').textContent='复制失败';
-};
-function escapeXml(s){return (s||'').replace(/[<>&'"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;'}[c]));}
-function exportKml(){
-  const rows=[...document.querySelectorAll('.place')];
-  const items=rows.map((r,i)=>({name:r.querySelector('.name').value.trim(),wgs:(PLACES_DATA[i]&&PLACES_DATA[i].wgs)||null})).filter(x=>x.name);
+function copyText(text, okMsg){
+  if(navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>setStatus(okMsg)); }
+  else setStatus('复制失败：浏览器不支持');
+}
+
+$('btnCopyText').addEventListener('click', ()=>{
+  const rows=currentPlaces();
+  if(!rows.length){ setStatus('暂无可复制的地点'); return; }
+  const text=rows.map((p,i)=>(i+1)+'. '+p.name+(p.wgs?' ('+p.wgs[0].toFixed(4)+', '+p.wgs[1].toFixed(4)+')':'')).join('\n');
+  copyText(text,'已复制地点列表');
+});
+
+$('btnCopyLinks').addEventListener('click', ()=>{
+  const rows=currentPlaces();
+  if(!rows.length){ setStatus('暂无可复制的地点'); return; }
+  const text=rows.map((p)=>{
+    const L=linksFor({name:p.name,lng:null,lat:null,wgs:p.wgs}, REGION);
+    return p.name+' | 苹果:'+L.apple+' | 高德:'+L.amap+' | 谷歌:'+L.google;
+  }).join('\n');
+  copyText(text,'已复制全部地图链接');
+});
+
+function escapeXml(s){ return (s||'').replace(/[<>&'"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;'}[c])); }
+$('btnExportKML').addEventListener('click', ()=>{
+  const items=currentPlaces();
   const withC=items.filter(x=>x.wgs);
+  if(!withC.length){ setStatus('没有带坐标的地点：请先配置高德 Key 并重新提取'); return; }
   const kml='<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n<name>旅记地图'+(REGION?' · '+REGION:'')+'</name>\n'+withC.map(x=>'<Placemark><name>'+escapeXml(x.name)+'</name><Point><coordinates>'+x.wgs[1]+','+x.wgs[0]+',0</coordinates></Point></Placemark>').join('\n')+'\n</Document>\n</kml>';
   const blob=new Blob([kml],{type:'application/vnd.google-earth.kml+xml'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='旅记地图'+(REGION?'-'+REGION:'')+'.kml';document.body.appendChild(a);a.click();a.remove();
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='旅记地图'+(REGION?'-'+REGION:'')+'.kml'; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-  $('status').textContent=withC.length?('已导出 '+withC.length+' 个带坐标地点'+(items.length-withC.length?'，'+(items.length-withC.length)+' 个无坐标已跳过':'')):'没有带坐标的地点：请先配置高德 key 并重新提取';
-}
-$('exportKml').onclick=exportKml;
-$('openAll').onclick=()=>{
-  const plat=$('openPlatform').value;
-  const links=[...document.querySelectorAll('.place')].map(r=>linksFor({name:r.querySelector('.name').value.trim(),lng:null,lat:null,wgs:null},REGION)[plat]).filter(Boolean);
-  if(!links.length){$('status').textContent='暂无可打开的地点';return;}
-  let i=0;
-  const step=()=>{ if(i>=links.length){$('status').textContent='已尝试打开 '+links.length+' 个地点';return;} window.open(links[i],'_blank'); i++; setTimeout(step,700); };
-  step();
-  $('status').textContent='正在逐个打开（若被浏览器拦截，请允许弹窗或改用「复制全部地图链接」）';
-};
-function renderDemo(){render([{name:'西湖',type:'景点'},{name:'断桥',type:'景点'},{name:'河坊街',type:'商圈'},{name:'灵隐寺',type:'景点'},{name:'龙井村',type:'景点'},{name:'满觉陇',type:'住宿'},{name:'杭州东站',type:'交通'}],'杭州');}
+  setStatus('已导出 '+withC.length+' 个带坐标地点'+(items.length-withC.length?'，'+(items.length-withC.length)+' 个无坐标已跳过':''));
+});
 
-$('extract').onclick=async()=>{
-  const rawLink=$('link').value.trim();
+$('btnOpenAll').addEventListener('click', ()=>{
+  const plat=$('openPlatform').value;
+  const links=currentPlaces().map(p=>linksFor({name:p.name,lng:null,lat:null,wgs:p.wgs},REGION)[plat]).filter(Boolean);
+  if(!links.length){ setStatus('暂无可打开的地点'); return; }
+  let i=0;
+  const step=()=>{ if(i>=links.length){ setStatus('已尝试打开 '+links.length+' 个地点'); return; } window.open(links[i],'_blank'); i++; setTimeout(step,700); };
+  step();
+  setStatus('正在逐个打开（若被拦截请允许弹窗，或改用「复制链接」）');
+});
+
+$('btnFeedback').addEventListener('click', ()=>{ $('about').scrollIntoView({behavior:'smooth'}); });
+
+async function runExtract(btn){
+  const rawLink=$('mainInput').value.trim();
   const link=pickUrl(rawLink)||rawLink;
-  let text=$('note').value.trim();
+  let text=$('textInput').value.trim();
   let geo='';
-  if(link){
-    $('status').textContent='正在解析链接…';
+
+  setBusy(btn, true, '解析中...');
+
+  if(MODE==='link' && link){
+    setStatus('正在解析链接……');
     try{
       const r=await fetch(API_BASE+'/api/parse-link',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:link})});
       const d=await r.json();
       if(d.error){
-        if(text){ $('status').textContent='链接解析失败，改用正文'; }
-        else { $('status').textContent=d.error; return; }
+        if(text){ setStatus('链接解析失败，改用正文'); }
+        else { setStatus(d.error); setBusy(btn,false); return; }
       } else {
         text=d.text||text;
         geo=d.geo||'';
-        if(d.text) $('note').value=d.text;
-        $('status').textContent=geo?('已解析链接，自带定位：'+geo+'，正在提取…'):'已解析链接，正在提取…';
+        if(d.text) $('textInput').value=d.text;
+        setStatus(geo?('已解析链接，自带定位：'+geo+'，正在提取……'):'已解析链接，正在提取……');
       }
     }catch(e){
-      if(!text){ $('status').textContent='链接解析失败，请手动粘贴正文'; return; }
+      if(!text){ setStatus('链接解析失败，请手动粘贴正文'); setBusy(btn,false); return; }
     }
   }
-  if(!text){$('status').textContent='请粘贴链接或正文';return}
-  $('status').textContent='提取中…';
+
+  if(!text){ setStatus('请粘贴链接或正文'); setBusy(btn,false); return; }
+
+  setStatus('提取中……');
   try{
     const r=await fetch(API_BASE+'/api/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,geo})});
     const d=await r.json();
-    if(d.error)throw new Error(d.error);
+    if(d.error) throw new Error(d.error);
     render(d.places,d.region);
-    $('status').textContent=d.demo?'演示模式（服务端未配 LLM Key）':'已提取 '+d.places.length+' 个地点'+(d.region?' · '+d.region:'');
-  }catch(e){ renderDemo(); $('status').textContent='后端不可用，已切换演示模式'; }
-};
+    setStatus(d.demo?'演示模式（服务端未配 LLM Key）':'已提取 '+d.places.length+' 个地点'+(d.region?' · '+d.region:''));
+  }catch(e){
+    render([
+      {name:'西湖',type:'景点'},{name:'断桥',type:'景点'},{name:'河坊街',type:'商圈'},
+      {name:'灵隐寺',type:'景点'},{name:'龙井村',type:'景点'},{name:'满觉陇',type:'住宿'},{name:'杭州东站',type:'交通'}
+    ],'杭州');
+    setStatus('后端不可用，已切换演示模式');
+  }finally{
+    setBusy(btn,false);
+  }
+}
+
+$('btnParse').addEventListener('click', ()=>runExtract($('btnParse')));
+$('btnParseText').addEventListener('click', ()=>runExtract($('btnParseText')));
 </script>
+
 <script>
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('./sw.js').catch(() => {});

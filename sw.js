@@ -1,4 +1,4 @@
-const CACHE = 'luji-map-v2';
+const CACHE = 'luji-map-v3';
 const ASSETS = [
   './',
   './index.html',
